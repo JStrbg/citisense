@@ -1,23 +1,22 @@
 import smbus
 bus = smbus.SMBus(1)
+cmd_mod = 0x80
+dat_mod = 0x40
+def send(addr, mode, data):
 
-def send(addr, data):
-    
-    DEVICE_REG_MODE1 = 0x00
-    mod2 = 0x1d
-    bus.write_i2c_block_data(addr,mod2, data)
+    bus.write_i2c_block_data(addr, mode, data)
 
 def init(ADDRESS):
     init_commands = [0xae, 0xd5, 0x50, 0x20, 0x81, 0x80, 0xa0, 0xa4, 0xa6, 0xad, 0x80, 0xc0, 0xd9, 0x1f, 0xdb, 0x27, 0xaf, 0xb0, 0x00, 0x11]
-    send(ADDRESS, init_commands)
-    
+    send(ADDRESS, cmd_mod, init_commands)
+
 def clearDisplay():
     for j in range (0,16):
-        send(0x3c, [0xb0 + j])
-        send(0x3c, [0x10])
-        send(0x3c, [0x10])
+        send(0x3c, cmd_mod, [0xb0 + j])
+        send(0x3c, cmd_mod, [0x0])
+        send(0x3c, cmd_mod, [0x10])
         for i in range (0,128):
-            send(0x3c,[0x00])
-            
+            send(0x3c, dat_mod, [0x00])
+
 init(0x3c)
 clearDisplay()
