@@ -16,14 +16,18 @@ ccs.tempOffset = temp - 25.0
 while(1):
     if ccs.available():
         display.settextpos(0,0)
-        display.putstring("Temp: ",ccs.calculateTemperature())
+        outtext = "Temp: " + str("%.2f" % ccs.calculateTemperature())
+        display.putstring(outtext)
         if not ccs.readData(): # should be 0 if read successfull
             display.settextpos(1,0)
-            display.putstring("CO2: ",ccs.geteCO2())
+            outtext = "CO2:  "+  str(ccs.geteCO2())
+            display.putstring(outtext)
             display.settextpos(2,0)
-            display.putstring("TVOC: ",ccs.getTVOC())
+            outtext = "TVOC: " + str(ccs.getTVOC())
+            display.putstring(outtext)
         else:
             error = 1
+            display.putstring("Ccs unavailable")
             while(1):
                 pass
     sleep(2)
