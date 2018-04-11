@@ -149,18 +149,3 @@ def settextpos(row,col):
     send(0x3c,cmd_mod,[0xb0+row])
     send(0x3c,cmd_mod,[column])
     send(0x3c,cmd_mod,[int(0x11 + col/2)])
-
-#init(0x3c)
-clearDisplay()
-putstring("aids")
-settextpos(0, 0)
-putstring("aids")
-settextpos(1, 1)
-putstring("aids")
-
-
-
-
-
-
-
