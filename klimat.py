@@ -1,7 +1,6 @@
 from time import sleep
-from Adafruit_CCS811 import Adafruit_CCS811
-import display
-ccs = Adafruit_CCS811()
+import display #import först pga pigpio.pi()
+import gas_sensor
 
 
 display.init(0x3c)
@@ -19,7 +18,7 @@ while(1):
         if not ccs.readData(): # should be 0 if read successfull
             cotext = "CO2:  "+  str(ccs.geteCO2()) + " ppm  "
             tvoctext = "TVOC: " + str(ccs.getTVOC()) + " ppm   "
-            
+
             display.settextpos(0,0)
             display.putstring(temptext)
             display.settextpos(1,0)
