@@ -1,5 +1,6 @@
 import pigpio
-
+import math
+from time import sleep
 CCS811_ADDRESS  =  0x5b
 
 CCS811_STATUS = 0x00
@@ -31,30 +32,60 @@ CCS811_DRIVE_MODE_250MS = 0x04
 CCS811_HW_ID_CODE = 0x81
 CCS811_REF_RESISTOR = 100000
 
-pi = pigpoi.pi()
-gas = pi.i2c_open(1,CCS811_ADDRESS)
+pi = pigpio.pi()
+gas = pi.bb_i2c_open(20,21,100000) #SDA = gpio20 scl = gpio21
 
 def send(mode,data):
-    pi.i2c_write_block_data(gas,mode,data)
-def recieve(mode):
-    return pi.i2c_read_block_data(gas,mode)
+    pi.bb_i2c_zip(20,[4, 0x5b, 2, 7, 2, mode, data, 3, 0])
+def recieve(mode,count):
+    pi.bb_i2c_zip(20,[4, 0x5b, 2, 7, 1, mode, 3, 0])
+    sleep(1/100000.0)
+    (s,buffy) = pi.bb_i2c_zip(20,[4, 0x5b, 2, 6, count, 3, 0])
+    if s >= 0:
+        return buffy
+    else:
+        return -3
 
 def init():
-    send(CCS811_BOOTLOADER_APP_START,[0]) #gå till application mode
+    send(CCS811_BOOTLOADER_APP_START,0x00) #gå till application mode
     sleep(.1)
-    status = recieve(CCS811_STATUS)
+    status = recieve(CCS811_STATUS,1)
     if status is not 0x10 or not 0x90:
         #error init
         return 2
     #set drive mode to 1s updates interrupts disabled
     send(CCS811_MEAS_MODE, 0x10)
+    
+def dataready():
+    datardy = recieve(CCS811_STATUS,1)
+    if int((datardy[0]) & 0x03) == 0x03:
+        return true
+    else:
+        return false
+    
 def readsensors():
-    buf = recieve(CCS811_ALG_RESULT_DATA)
-    co = (buf[0] << 8) | (buf[1])
-    tvc = (buf[2] << 8) | (buf[3])
+    while(not dataready()):
+        pass
+    buf = recieve(CCS811_ALG_RESULT_DATA,4)
+    cleaned_buf = [0] * 4
+    for i in range(4):
+        if buf[i] is '':
+            cleaned_buf[i] = 0
+        else:
+            cleaned_buf[i] = int(buf[i])
+    co = (cleaned_buf[0] << 8) | (cleaned_buf[1])
+    tvc = (cleaned_buf[2] << 8) | (cleaned_buf[3])
+    print(co)
+    print(tvc)
     return [co,tvc]
 
+    
+
 init()
-b = readsensors()
-print b[0]
-print b[1]    
+for i in range(100):
+    (b,a) = readsensors()
+    #print(b)
+    #print(a)
+    sleep(1)
+pi.i2c_close(gas)
+pi.stop()

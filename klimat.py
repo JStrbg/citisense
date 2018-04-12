@@ -1,11 +1,11 @@
 from time import sleep
-import display #import först pga pigpio.pi()
-import gas_sensor
+import display 
+from Adafruit_CCS811 import Adafruit_CCS811
 
 
 display.init(0x3c)
 display.clearDisplay()
-
+ccs = Adafruit_CCS811()
 
 while not ccs.available():
     pass
