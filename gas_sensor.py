@@ -31,18 +31,20 @@ CCS811_DRIVE_MODE_250MS = 0x04
 
 CCS811_HW_ID_CODE = 0x81
 CCS811_REF_RESISTOR = 100000
-
+SDA = 5
+SCL = 6
 pi = pigpio.pi()
-gas = pi.bb_i2c_open(20,21,10000) #SDA = gpio20 scl = gpio21
+gas = pi.bb_i2c_open(SDA,SCL,10000) #SDA = gpio20 scl = gpio21
 
 def send(mode,data):
-    (s, buffy) = pi.bb_i2c_zip(20,[4, 0x5b, 2, 7, 1, mode, 2 , 7, 1, data, 3, 0])
+    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, mode, 2 , 7, 1, data, 3, 0])
     print("sent, and returned was: " + str(buffy) + str(s))
 def recieve(mode,count):
-    (s, buffy) =pi.bb_i2c_zip(20,[4, 0x5b, 2, 7, 1, mode, 2, 6, count, 3, 0])
+    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, mode, 2, 6, count, 3, 0])
+        
     #print("Instructed what to recieve, and returned was: " + str(buffy) + str(s))
     #(s,buffy) = pi.bb_i2c_zip(20,[4, 0x5b, 2, 6, count, 3, 0])
-    print("Raw recieved: " + str(buffy) + "S: " + str(s))
+    #print("Raw recieved: " + str(buffy) + "S: " + str(s))
    # if s >= 0:
     return buffy
     #else:
@@ -57,19 +59,21 @@ def init():
        # raise ValueError('status wrong')
     #set drive mode to 1s updates interrupts disabled
     send(CCS811_MEAS_MODE, 0x10)
+    sleep(1)
     
 def dataready():
     datardy = recieve(CCS811_STATUS,1)
     if datardy == '':
         return False
-    if (int(datardy) & 0x03) == 0x03:
+    if (int(datardy[0]) & 0x03) == 0x03:
         return True
     else:
         return False
     
 def readsensors():
-    #while(not dataready()):
-     #   pass
+    while(not dataready()):
+        checkerror()
+        pass
     buf = recieve(CCS811_ALG_RESULT_DATA,4)
     cleaned_buf = [0] * 4
     for i in range(len(buf)):
@@ -83,14 +87,18 @@ def readsensors():
     print(tvc)
     return [co,tvc]
 
-    
-
+def checkerror():
+    buffy = recieve(CCS811_STATUS,1)
+    if  (int(buffy[0]) & 0x01) == 0x01: #Error reported by sensor
+        buffy = recieve(CCS811_ERROR_ID, 1)
+        print("Error is: " + str(buffy))
 init()
-for i in range(100):
-    print("read " + str(i))
-    (b,a) = readsensors()
+checkerror()
+#for i in range(10):
+ #   print("read " + str(i))
+  #  (b,a) = readsensors()
     #print(b)
     #print(a)
-    sleep(1)
-pi.bb_i2c_close(20)
+sleep(1)
+pi.bb_i2c_close(SDA)
 pi.stop()
