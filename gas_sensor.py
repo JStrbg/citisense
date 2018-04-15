@@ -31,7 +31,7 @@ CCS811_DRIVE_MODE_250MS = 0x04
 
 CCS811_HW_ID_CODE = 0x81
 CCS811_REF_RESISTOR = 100000
-tempOffset = 25
+tempOffset = 0
 SDA = 5
 SCL = 6
 pi = pigpio.pi()
