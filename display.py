@@ -103,7 +103,6 @@ bus = pi.i2c_open(1, 0x3c)
 cmd_mod = 0x80
 dat_mod = 0x40
 def send(addr, mode, data):
-
     pi.i2c_write_byte_data(bus, mode, data)
 
 def init(ADDRESS):

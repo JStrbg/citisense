@@ -31,10 +31,11 @@ CCS811_DRIVE_MODE_250MS = 0x04
 
 CCS811_HW_ID_CODE = 0x81
 CCS811_REF_RESISTOR = 100000
+tempOffset = 25
 SDA = 5
 SCL = 6
 pi = pigpio.pi()
-gas = pi.bb_i2c_open(SDA,SCL,100000) #SDA = gpio20 scl = gpio21
+gas = pi.bb_i2c_open(SDA,SCL,100000)
 
 def send(mode,data):
     (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 2, mode, data, 3, 0])
@@ -54,7 +55,7 @@ def init():
     print(str(status))
     checkerror()
     send(CCS811_MEAS_MODE, 0x10) #Välj mode
-    
+
 def dataready():
     datardy = recieve(CCS811_STATUS,1)
     if datardy == '':
@@ -63,7 +64,7 @@ def dataready():
         return True
     else:
         return False
-    
+
 def readsensors():
     while(not dataready()):
         #checkerror()
@@ -84,14 +85,15 @@ def checkerror():
     if  (int(buffy[0]) & 0x01) == 0x01: #Error reported by sensor
         buffy = recieve(CCS811_ERROR_ID, 1)
         print("Error is: " + str(buffy))
+def calctemp():
+    buf = recieve(CCS811_NTC, 4)
+    vref = (buf[0] << 8) | buf[1]
+    vrntc = (buf[2] << 8) | buf[3]
+    rntc = (float(vrntc) * float(CCS811_REF_RESISTOR) / float(vref) )
 
-checkerror()
-init()
-checkerror()
-while(True):
-    (co,tvoc) = readsensors()
-    print("\nCo: " + str(co))
-    print("Tvoc: " + str(tvoc))
-    sleep(1)
-pi.bb_i2c_close(SDA)
-pi.stop()
+    ntc_temp = math.log(rntc / 10000.0)
+    ntc_temp /= 3380.0
+    ntc_temp += 1.0 / (25 + 273.15)
+    ntc_temp = 1.0 / ntc_temp
+    ntc_temp -= 273.15
+    return ntc_temp - tempOffset
