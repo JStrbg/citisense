@@ -34,42 +34,26 @@ CCS811_REF_RESISTOR = 100000
 SDA = 5
 SCL = 6
 pi = pigpio.pi()
-gas = pi.bb_i2c_open(SDA,SCL,10000) #SDA = gpio20 scl = gpio21
+gas = pi.bb_i2c_open(SDA,SCL,100000) #SDA = gpio20 scl = gpio21
 
 def send(mode,data):
-    sleep(0.2)
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, mode, 3, 0])
-    sleep(0.2)
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, data, 3, 0])
-    sleep(0.2)
-    print("sent, and returned was: " + str(buffy) + str(s))
+    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 2, mode, data, 3, 0])
 def recieve(mode,count):
     (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, mode, 3, 0])
-    sleep(0.2)
     (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 6, count, 3, 0])
-    sleep(0.2)
-   
-   # if s >= 0:
-    return buffy
-    #else:
-        #raise ValueError('returned s < 0 on recieve')
+    if s >= 0:
+        return buffy
+    else:
+        raise ValueError('returned s < 0 on recieve')
 
 def init():
-    sleep(0.5)
-    send(CCS811_BOOTLOADER_APP_START,0x00) #gå till application mode
-    
+    #Starta applikationen
+    pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
+    sleep(0.1)
     status = recieve(CCS811_STATUS,1)
     print(str(status))
-    sleep(5)
-    #if status is not 0x10 or not 0x90:
-        #error init
-       # raise ValueError('status wrong')
-    #set drive mode to 1s updates interrupts disabled
-    print("Measr mode : " + str(recieve(CCS811_MEAS_MODE, 1)))
-    sleep(1)
-    send(CCS811_MEAS_MODE, 0x10) #error här
-    sleep(1)
-    print("Measr mod post send x10: " + str(recieve(CCS811_MEAS_MODE, 1)))
+    checkerror()
+    send(CCS811_MEAS_MODE, 0x10) #Välj mode
     
 def dataready():
     datardy = recieve(CCS811_STATUS,1)
@@ -81,9 +65,9 @@ def dataready():
         return False
     
 def readsensors():
-    #while(not dataready()):
+    while(not dataready()):
         #checkerror()
-       # pass
+        pass
     buf = recieve(CCS811_ALG_RESULT_DATA,4)
     cleaned_buf = [0] * 4
     for i in range(len(buf)):
@@ -101,12 +85,12 @@ def checkerror():
         buffy = recieve(CCS811_ERROR_ID, 1)
         print("Error is: " + str(buffy))
 
-#init()
 checkerror()
-for i in range(10000):
-    print("read " + str(i))
+init()
+checkerror()
+while(True):
     (co,tvoc) = readsensors()
-    print("Co: " + str(co))
+    print("\nCo: " + str(co))
     print("Tvoc: " + str(tvoc))
     sleep(1)
 pi.bb_i2c_close(SDA)
