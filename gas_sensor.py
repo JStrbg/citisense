@@ -52,7 +52,6 @@ def init():
     pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
     sleep(0.1)
     status = recieve(CCS811_STATUS,1)
-    print(str(status))
     checkerror()
     send(CCS811_MEAS_MODE, 0x10) #Välj mode
 
