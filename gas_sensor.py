@@ -37,6 +37,9 @@ SCL = 6
 pi = pigpio.pi()
 gas = pi.bb_i2c_open(SDA,SCL,100000)
 
+def close_bus():
+    pi.bb_i2c_close(SDA)
+    pi.stop()
 def send(mode,data):
     (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 2, mode, data, 3, 0])
 def recieve(mode,count):
@@ -47,13 +50,13 @@ def recieve(mode,count):
     else:
         raise ValueError('i2c error returned s < 0 on recieve')
 
-def init():
+def init(meas_mode):
     #Starta applikationen
     pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
     sleep(0.1)
     status = recieve(CCS811_STATUS,1)
-    checkerror()
-    send(CCS811_MEAS_MODE, 0x10) #Välj mode
+    #checkerror()
+    send(CCS811_MEAS_MODE, meas_mode) #Välj mode
 
 def dataready():
     status = recieve(CCS811_STATUS,1)
@@ -66,7 +69,7 @@ def dataready():
 
 def readsensors():
     while(not dataready()):
-        checkerror()
+        #checkerror()
         pass
     buf = recieve(CCS811_ALG_RESULT_DATA,4)
     cleaned_buf = [0] * 4
@@ -84,6 +87,7 @@ def checkerror():
     if  (int(buffy[0]) & 0x01) == 0x01: #Error reported by sensor
         buffy = recieve(CCS811_ERROR_ID, 1)
         print("Error is: " + str(buffy))
+        return str(buffy)
 
 def calctemp():
     buf = recieve(CCS811_NTC, 4)
@@ -98,13 +102,18 @@ def calctemp():
     ntc_temp -= 273.15
     return ntc_temp - tempOffset
 
-def set_environment(temperature, humidity = 75 ):
-	hum_perc = humidity << 1
-    parts = math.fmod(temperature)
+def set_environment(temperature, humidity = 50 ):
+    if temperature < -25:
+        temperature = -25
+    if humidity < 0 or humidity > 100:
+        humidity = 50
+    hum_perc = int(round(humidity)) << 1
+    parts = math.modf(temperature)
     fractional = parts[0]
-    temperature = parts[1]
-    temp_high = ((temperature + 25) << 9)
-    temp_low = ((fractional / 0.001953125) & 0x1FF)
+    temp_int = int(parts[1])
+    temp_high = ((temp_int + 25) << 9)
+    temp_low = (int(fractional / 0.001953125) & 0x1FF)
     temp_conv = (temp_high | temp_low)
     buf = [hum_perc, 0x00,((temp_conv >> 8) & 0xFF), (temp_conv & 0xFF)]
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 4, CCS811_END_DATA, buf[0], buf[1], buf[2], 3, 0])
+    print(str(buf))
+    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 4, CCS811_ENV_DATA, buf[0], buf[1], buf[2], 3, 0])

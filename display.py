@@ -102,10 +102,16 @@ pi=pigpio.pi()
 bus = pi.i2c_open(1, 0x3c)
 cmd_mod = 0x80
 dat_mod = 0x40
+
+def close_bus():
+    pi.i2c_close(1)
+    pi.stop()
+    
 def send(addr, mode, data):
     pi.i2c_write_byte_data(bus, mode, data)
 
-def init(ADDRESS):
+def init():
+    ADDRESS = 0x3c
     send(ADDRESS, cmd_mod, 0xae)
     send(ADDRESS, cmd_mod, 0xd5)
     send(ADDRESS, cmd_mod, 0x50)
