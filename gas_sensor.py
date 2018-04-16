@@ -41,12 +41,12 @@ def close_bus():
     pi.bb_i2c_close(SDA)
     pi.stop()
 def send(mode,data):
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 2, mode, data, 3, 0])
+    (s, buf) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 2, mode, data, 3, 0])
 def recieve(mode,count):
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, mode, 3, 0])
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 6, count, 3, 0])
+    (s, buf) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, mode, 3, 0])
+    (s, buf) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 6, count, 3, 0])
     if s >= 0:
-        return buffy
+        return buf
     else:
         raise ValueError('i2c error returned s < 0 on recieve')
 
@@ -80,14 +80,16 @@ def readsensors():
             cleaned_buf[i] = int(buf[i])
     co = (cleaned_buf[0] << 8) | (cleaned_buf[1])
     tvc = (cleaned_buf[2] << 8) | (cleaned_buf[3])
+    if co < 400:
+        (co,tvc) = readsensors()
     return [co,tvc]
 
 def checkerror():
-    buffy = recieve(CCS811_STATUS,1)
-    if  (int(buffy[0]) & 0x01) == 0x01: #Error reported by sensor
-        buffy = recieve(CCS811_ERROR_ID, 1)
-        print("Error is: " + str(buffy))
-        return str(buffy)
+    buf = recieve(CCS811_STATUS,1)
+    if  (int(buf[0]) & 0x01) == 0x01: #Error reported by sensor
+        buf = recieve(CCS811_ERROR_ID, 1)
+        print("Error is: " + str(buf))
+        return str(buf)
 
 def calctemp():
     buf = recieve(CCS811_NTC, 4)
@@ -109,11 +111,10 @@ def set_environment(temperature, humidity = 50 ):
         humidity = 50
     hum_perc = int(round(humidity)) << 1
     parts = math.modf(temperature)
-    fractional = parts[0]
+    fractional = math.fabs(parts[0])
     temp_int = int(parts[1])
     temp_high = ((temp_int + 25) << 9)
     temp_low = (int(fractional / 0.001953125) & 0x1FF)
     temp_conv = (temp_high | temp_low)
     buf = [hum_perc, 0x00,((temp_conv >> 8) & 0xFF), (temp_conv & 0xFF)]
-    print(str(buf))
     (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 4, CCS811_ENV_DATA, buf[0], buf[1], buf[2], 3, 0])

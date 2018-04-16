@@ -4,13 +4,13 @@ import gas_sensor
 
 def initiate():
     display.init()
-    mode = 0x10 #0x10 = 1_sec_meas
+    mode = 0x10 #0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
     gas_sensor.init(mode)
     display.clearDisplay()
 
     temp = gas_sensor.calctemp()
     gas_sensor.tempOffset = temp - 25.0
-    gas_sensor.set_environment(23.5,48.5)
+    gas_sensor.set_environment(23,40)
 
 def meas_to_display():
     (co,tvoc) = gas_sensor.readsensors()
@@ -30,7 +30,7 @@ def meas_to_display():
 
 initiate()
 time = 0
-while(time<300):
+while(True):
     meas_to_display()
     time = time + 1
 gas_sensor.close_bus()
