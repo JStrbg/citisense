@@ -1,6 +1,7 @@
 from time import sleep
 import display
 import gas_sensor
+import adc
 
 def initiate():
     display.init()
@@ -14,9 +15,13 @@ def initiate():
 
 def meas_to_display():
     (co,tvoc) = gas_sensor.readsensors()
+    regn2 = adc.read_adc_raw(0,0)
+    regn = adc.read_adc_voltage(0,0) #channel, mode = 0, 0
     temptext = "Temp: " + str("%.2f" % gas_sensor.calctemp() + "C  ")
     cotext = "CO2:  "+  str(co) + " ppm  "
     tvoctext = "TVOC: " + str(tvoc) + " ppm   "
+    regntext = "Regn: " + str(regn)
+    regntext2 = "RegnRaw: " + str(regn2)
     display.settextpos(0,0)
     display.putstring(temptext)
     display.settextpos(1,0)
@@ -25,7 +30,7 @@ def meas_to_display():
     display.putstring(tvoctext)
     err = gas_sensor.checkerror()
     if err:
-        display.settextpos(3,0)
+        display.settextpos(4,0)
         display.putstring("sens_gas err: " + err)
 
 initiate()
@@ -35,4 +40,3 @@ while(True):
     time = time + 1
 gas_sensor.close_bus()
 display.close_bus()
-
