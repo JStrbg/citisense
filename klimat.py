@@ -8,6 +8,7 @@ display.clearDisplay()
 
 temp = gas_sensor.calctemp()
 gas_sensor.tempOffset = temp - 25.0
+gas_sensor.set_environment(22,40)
 
 while(1):
     (co,tvoc) = gas_sensor.readsensors()

@@ -45,7 +45,7 @@ def recieve(mode,count):
     if s >= 0:
         return buffy
     else:
-        raise ValueError('returned s < 0 on recieve')
+        raise ValueError('i2c error returned s < 0 on recieve')
 
 def init():
     #Starta applikationen
@@ -57,17 +57,17 @@ def init():
     send(CCS811_MEAS_MODE, 0x10) #Välj mode
 
 def dataready():
-    datardy = recieve(CCS811_STATUS,1)
-    if datardy == '':
+    status = recieve(CCS811_STATUS,1)
+    if status == '':
         return False
-    if (int(datardy[0]) & 0x08) == 0x08:
+    if (int(status[0]) & 0x08) == 0x08:
         return True
     else:
         return False
 
 def readsensors():
     while(not dataready()):
-        #checkerror()
+        checkerror()
         pass
     buf = recieve(CCS811_ALG_RESULT_DATA,4)
     cleaned_buf = [0] * 4
@@ -85,6 +85,7 @@ def checkerror():
     if  (int(buffy[0]) & 0x01) == 0x01: #Error reported by sensor
         buffy = recieve(CCS811_ERROR_ID, 1)
         print("Error is: " + str(buffy))
+
 def calctemp():
     buf = recieve(CCS811_NTC, 4)
     vref = (buf[0] << 8) | buf[1]
@@ -97,3 +98,14 @@ def calctemp():
     ntc_temp = 1.0 / ntc_temp
     ntc_temp -= 273.15
     return ntc_temp - tempOffset
+
+def set_environment(temperature, humidity = 75 ):
+	hum_perc = humidity << 1
+    parts = math.fmod(temperature)
+    fractional = parts[0]
+    temperature = parts[1]
+    temp_high = ((temperature + 25) << 9)
+    temp_low = ((fractional / 0.001953125) & 0x1FF)
+    temp_conv = (temp_high | temp_low)
+    buf = [hum_perc, 0x00,((temp_conv >> 8) & 0xFF), (temp_conv & 0xFF)]
+    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 4, CCS811_END_DATA, buf[0], buf[1], buf[2], 3, 0])
