@@ -35,8 +35,12 @@ tempOffset = 0
 SDA = 22
 SCL = 27
 pi = pigpio.pi()
+try:
+    pi.bb_i2c_close(SDA)
+    sleep(0.2)
+except pigpio.error as e: 
+    print(str(e) + " Startar om bb i2c port " + str(SDA))
 gas = pi.bb_i2c_open(SDA,SCL,100000)
-
 def close_bus():
     pi.bb_i2c_close(SDA)
     pi.stop()
