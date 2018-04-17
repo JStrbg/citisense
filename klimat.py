@@ -2,6 +2,7 @@ from time import sleep
 import display
 import gas_sensor
 import adc
+import math
 
 def initiate():
     display.init()
@@ -12,7 +13,14 @@ def initiate():
     temp = gas_sensor.calctemp()
     gas_sensor.tempOffset = temp - 25.0
     #gas_sensor.set_environment(21,50)
-
+def spam_mic():
+    val = adc.read_mic()
+    mictext = "Mic: " + str(val) + "  "
+    if val <= 0:
+        display.settextpos(5,0)
+    else:
+        display.settextpos(6,0)
+    display.putstring(mictext)
 def meas_to_display():
     (co,tvoc) = gas_sensor.readsensors()
     regnraw = adc.read_adc_raw(0,0)
@@ -22,6 +30,7 @@ def meas_to_display():
     tvoctext = "TVOC: " + str(tvoc) + " ppm   "
     regntext = "Regn: " + str(round(regn,4)) + "V "
     regnrawtext = "RegnRaw: " + str(round(regnraw,2)) + "  "
+    mictext = "Mic: " + str(adc.read_mic())
     display.settextpos(0,0)
     display.putstring(temptext)
     display.settextpos(1,0)
@@ -32,16 +41,19 @@ def meas_to_display():
     display.putstring(regntext)
     display.settextpos(4,0)
     display.putstring(regnrawtext)
+    display.settextpos(5,0)
+    display.putstring(mictext)
     err = gas_sensor.checkerror()
     if err:
-        display.settextpos(5,0)
+        display.settextpos(7,0)
         display.putstring("sens_gas err: " + err)
 
 initiate()
 time = 0
 while(True):
-    meas_to_display()
-    time = time + 1
+    #meas_to_display()
+    #time = time + 1
+    spam_mic()
 gas_sensor.close_bus()
 display.close_bus()
 adc.close_bus()
