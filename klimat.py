@@ -52,14 +52,13 @@ def meas_to_display():
     if err:
         display.settextpos(7,0)
         display.putstring("sens_gas err: " + err)
-def index():
-    return 'Tja fittnoob'
 
 initiate()
 app = Flask(__name__)
 @app.route('/')
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+def index():
+    return 'Tja fittnoob'
+
 
 time = 0
 while(True):
