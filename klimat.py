@@ -15,6 +15,9 @@ def initiate():
     temp = gas_sensor.calctemp()
     gas_sensor.tempOffset = temp - 25.0
     #gas_sensor.set_environment(21,50)
+
+    #webapp
+
 def spam_mic():
     val = adc.read_mic()
     mictext = "Mic: " + str(val) + "  "
@@ -49,8 +52,15 @@ def meas_to_display():
     if err:
         display.settextpos(7,0)
         display.putstring("sens_gas err: " + err)
+def index():
+    return 'Tja fittnoob'
 
 initiate()
+app = Flask(__name__)
+@app.route('/')
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
+
 time = 0
 while(True):
     #meas_to_display()
