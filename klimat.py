@@ -3,7 +3,9 @@ import display
 import gas_sensor
 import adc
 import math
-
+#https://projects.raspberrypi.org/en/projects/python-web-server-with-flask/4
+#https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
+# pot : http://www.instructables.com/id/Raspberry-Pi-Web-Server-Wireless-Access-Point-WAP/
 def initiate():
     display.init()
     mode = 0x10 #0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
