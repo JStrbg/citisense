@@ -1,12 +1,17 @@
 import subprocess
 from pybtooth import BluetoothManager
 bm=BluetoothManager()
+wifipower = True
 while(1):
     devicelist=bm.getConnectedDevices()
-    if devicelist == None:
-        #subprocess.call(["echo "]
-        print("Yo not mama connectus patronum")
+    if devicelist == []:
+        if wifipower:
+            subprocess.call(["sudo service hostapd stop",shell=True])
+            subprocess.call(["sudo ifdown wlan0",shell=True])
+            wifipower = False
     else:
-        pritn("Ludde connectish mby")
-        print(str(devicelist))
+        if not wifipower:
+            subprocess.call(["sudo ifup wlan0",shell=True])
+            subprocess.call(["sudo service hostapd start",shell=True])
+            wifipower = True
     sleep(1)
