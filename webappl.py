@@ -4,11 +4,11 @@ from flask import Flask
 #https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 
 def read_log():
-    log_content = "Time, Temp, CO2, TVOC, Rain, Noise"
+    log_content = ""
     try:
         with open("/media/pi/KINGSTON/data_log.csv") as file:
             for line in file:
-                log_content += '\n' + line
+                log_content += line + "<br/>"
         return log_content
     except IOError:
         print("USB-mem IO-Err webapp")
