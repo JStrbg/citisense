@@ -4,6 +4,7 @@ import display
 import gas_sensor
 import adc
 import math
+import subprocess
 from datetime import datetime
 
 #globals
@@ -71,6 +72,7 @@ def update_sensors(Log):
         display.putstring("sens_gas err: " + err)
     if Log:
         append_log()
+        subprocess.call(['sudo', 'sh', 'camera.sh'])
 
 initiate()
 while(1):
