@@ -1,18 +1,16 @@
-from time import sleep
+import os
+import time
 import display
 import gas_sensor
 import adc
 import math
-from flask import Flask
-#https://projects.raspberrypi.org/en/projects/python-web-server-with-flask/4
-#https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
-# pot : http://www.instructables.com/id/Raspberry-Pi-Web-Server-Wireless-Access-Point-WAP/
+from datetime import datetime
 
 #globals
 co = 0
 tvoc = 0
 temp = 0.0
-mic = 0
+mic = 0.0
 regn = 0.0
 regnraw = 0
 temptext = "Temp: " + str("%.2f" % temp + "C  ")
@@ -21,6 +19,7 @@ tvoctext = "TVOC: " + str(tvoc) + " ppm   "
 regntext = "Regn: " + str(round(regn,4)) + "V "
 regnrawtext = "RegnRaw: " + str(round(regnraw,2)) + "  "
 mictext = "Mic:  " + str(mic) + "   "
+
 def initiate():
     display.init()
     mode = 0x10 #0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
@@ -30,18 +29,19 @@ def initiate():
     temp = gas_sensor.calctemp()
     gas_sensor.tempOffset = temp - 25.0
     #gas_sensor.set_environment(21,50)
-
-    #webapp
-
-def spam_mic():
-    mic = adc.read_mic()
-    mictext = "Mic: " + str(mic) + "  "
-    if val <= 0:
-        display.settextpos(5,0)
-    else:
-        display.settextpos(6,0)
-    display.putstring(mictext)
-def meas_to_display():
+def append_log():
+    try:
+        file = open("/media/pi/KINGSTON/data_log.csv")
+    except IOError:
+        display.settextpos(7,0)
+        display.putstring("USB-mem IO-Err log")
+        print("USB-mem IO-Err logger")
+        return 2
+    if os.stat("/media/pi/KINGSTON/data_log.csv").st_size == 0:
+        file.write('Time, Temp, CO2, TVOC, Rain, Noise\n')
+    file.write(str(datetime.now()) + ',' + str("%.2f" % temp) + ',' + str(co) + ',' + str(tvoc) + ',' + str(round(regn,3)) + ',' + str(mic) + "\n"')
+    file.close()
+def update_sensors(Log):
     (co,tvoc) = gas_sensor.readsensors()
     regnraw = adc.read_adc_raw(0,0)
     regn = adc.read_adc_voltage(0,0) #channel, mode = 0, 0
@@ -69,16 +69,13 @@ def meas_to_display():
     if err:
         display.settextpos(7,0)
         display.putstring("sens_gas err: " + err)
-    return temptext + "  " + cotext + "  " + tvoctext + "  " + regntext + "  " + mictext
+    if Log:
+        append_log()
 
 initiate()
-app = Flask(__name__)
-@app.route('/')
-def index():
-    return meas_to_display()
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int("80"))
-
+while(1):
+    update_sensors(True)
+    sleep(10)
 gas_sensor.close_bus()
 display.close_bus()
 adc.close_bus()
