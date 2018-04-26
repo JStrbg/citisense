@@ -30,9 +30,11 @@ def append_log(temp, co, tvoc, regn, mic):
             file.write('Time, Temp, CO2, TVOC, Rain, Noise\n')
         file.write(datetime.now().strftime('%H:%M:%S') + ", " + str("%.2f" % temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(round(regn,3)) + ", " + str(mic) + "\n")
         file.close()
+        display.settextpos(12,-2)
+        display.putstring("USB Connected")
     else:
         print("No USB")
-        display.settextpos(7,-1)
+        display.settextpos(12,-2)
         display.putstring("No USB")
         sleep(1)
 def update_sensors(Log):
