@@ -40,7 +40,7 @@ try:
     sleep(0.2)
 except pigpio.error as e: 
     print(str(e) + " Startar om bb i2c port " + str(SDA))
-gas = pi.bb_i2c_open(SDA,SCL,100000)
+gas = pi.bb_i2c_open(SDA,SCL,350000)
 def close_bus():
     pi.bb_i2c_close(SDA)
     pi.stop()
@@ -73,7 +73,7 @@ def dataready():
 
 def readsensors():
     while(not dataready()):
-        #checkerror()
+        sleep(0.2)
         pass
     buf = recieve(CCS811_ALG_RESULT_DATA,4)
     cleaned_buf = [0] * 4

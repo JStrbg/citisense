@@ -80,10 +80,11 @@ initiate()
 i = 0
 while(1):
     i += 1
-    update_sensors(True, False)
-    sleep(10)
-    if i == 6:
-        #update_sensors(True,True) #usb-backup
+    update_sensors(False, False)
+    sleep(0.9)
+    if i == 60:
+        update_sensors(True, False) #log local
+        #update_sensors(True,True) #usb-backup + pic
         i = 0
 gas_sensor.close_bus()
 display.close_bus()

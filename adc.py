@@ -2,7 +2,7 @@ import pigpio
 
 pi = pigpio.pi()
 bus = pi.spi_open(0,1000000,0) #slave 0, spi bus 0, 1MHz
-mic = pi.spi_open(1,1000000,0)
+mic = pi.spi_open(1,48000,0)
 adcrefvoltage = 5.21
 #(a,b) = pi.spi_read(bus,count)
 #(byte_count, rx_data) = pi.spi_xfer(bus,tx_data)
@@ -22,9 +22,9 @@ def read_mic():
     return sample #*3.3/23
 def estimate_noise():
     sample = 0
-    for i in range(5000):
+    for i in range(100):
         sample += abs(read_mic())
-    return round(sample/5000,1)
+    return round(sample/100,1)
 def read_adc_voltage(channel, mode):
     """
     Read the voltage from the selected channel on the ADC

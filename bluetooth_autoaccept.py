@@ -20,6 +20,7 @@ import bluetooth
 
 import logging
 import logging.handlers
+import subprocess
 
 logger = logging.getLogger('edl_agent')
 logger.setLevel(logging.DEBUG)
@@ -33,7 +34,7 @@ def printlog(s):
 BUS_NAME = 'org.bluez'
 AGENT_INTERFACE = 'org.bluez.Agent1'
 AGENT_PATH = "/test/agent"
-
+subprocess.call(['sudo', 'hciconfig', 'hci0', 'piscan']) #make discoverable
 bus = None
 device_obj = None
 dev_path = None

@@ -3,7 +3,7 @@ from time import sleep
 from pybtooth import BluetoothManager
 bm=BluetoothManager()
 wifipower = True
-subprocess.call(['sudo', 'hciconfig', 'hci0', 'piscan'])
+
 while(1):
     devicelist=bm.getConnectedDevices()
     if devicelist == []:
