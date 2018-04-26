@@ -19,6 +19,8 @@ def initiate():
     #gas_sensor.set_environment(21,50)
 def append_log(temp, co, tvoc, regn, mic):
     if os.path.isdir("/home/pi/citisense/logs/"):
+        display.settextpos(12,-2)
+        display.putstring("Logging..")
         try:
             file = open("/home/pi/citisense/logs/data_log.csv", "a")
         except IOError:
@@ -69,7 +71,7 @@ def update_sensors(Log, Backup):
         append_log(temp, co, tvoc, regn, mic)
     if Backup:
         display.settextpos(9,-2)
-        display.putstring("WRITING USB PLS WAIT")
+        display.putstring("WRITING TO USB")
         subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
         subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
         display.putstring("                    ")
