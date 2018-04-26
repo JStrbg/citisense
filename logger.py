@@ -65,7 +65,7 @@ def update_sensors(Log):
         display.putstring("sens_gas err: " + err)
     if Log:
         append_log(temp, co, tvoc, regn, mic)
-        subprocess.call(['sudo', 'sh', 'camera.sh'])
+        subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
 
 initiate()
 while(1):
