@@ -33,7 +33,7 @@ def append_log(temp, co, tvoc, regn, mic):
         file.write(datetime.now().strftime('%H:%M:%S') + ", " + str("%.2f" % temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(round(regn,3)) + ", " + str(mic) + "\n")
         file.close()
         display.settextpos(12,-2)
-        display.putstring("Logged")
+        display.putstring("Logged   ")
     else:
         print("Io error logger")
         display.settextpos(12,-2)
@@ -67,9 +67,9 @@ def update_sensors(Log, Backup):
     if err:
         display.settextpos(7,-2)
         display.putstring("sens_gas err: " + err)
-    if Log:
+    if Log == True:
         append_log(temp, co, tvoc, regn, mic)
-    if Backup:
+    if Backup == True:
         display.settextpos(9,-2)
         display.putstring("WRITING TO USB")
         subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
@@ -83,7 +83,7 @@ while(1):
     update_sensors(True, False)
     sleep(10)
     if i == 6:
-        update_sensors(True,True) #usb-backup
+        #update_sensors(True,True) #usb-backup
         i = 0
 gas_sensor.close_bus()
 display.close_bus()
