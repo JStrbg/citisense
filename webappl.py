@@ -6,7 +6,7 @@ from flask import Flask
 def read_log():
     log_content = ""
     try:
-        with open("/media/pi/KINGSTON/data_log.csv") as file:
+        with open("/home/pi/citisense/logs/data_log.csv") as file:
             for line in file:
                 log_content += line + "<br/>"
         return log_content

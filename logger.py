@@ -18,15 +18,15 @@ def initiate():
     gas_sensor.tempOffset = temp - 25.0
     #gas_sensor.set_environment(21,50)
 def append_log(temp, co, tvoc, regn, mic):
-    if os.path.isdir("/media/pi/KINGSTON/"):
+    if os.path.isdir("/home/pi/citisense/logs/"):
         try:
-            file = open("/media/pi/KINGSTON/data_log.csv", "a")
+            file = open("/home/pi/citisense/logs/data_log.csv", "a")
         except IOError:
             display.settextpos(7,-1)
             display.putstring("USB-mem IO-Err log")
             print("USB-mem IO-Err logger")
             return 2
-        if os.stat("/media/pi/KINGSTON/data_log.csv").st_size == 0:
+        if os.stat("/home/pi/citisense/logs/data_log.csv").st_size == 0:
             file.write('Time, Temp, CO2, TVOC, Rain, Noise\n')
         file.write(datetime.now().strftime('%H:%M:%S') + ", " + str("%.2f" % temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(round(regn,3)) + ", " + str(mic) + "\n")
         file.close()
@@ -35,9 +35,9 @@ def append_log(temp, co, tvoc, regn, mic):
     else:
         print("No USB")
         display.settextpos(12,-2)
-        display.putstring("No USB")
+        display.putstring("No USB          ")
         sleep(1)
-def update_sensors(Log):
+def update_sensors(Log, Backup):
     (co,tvoc) = gas_sensor.readsensors()
     regnraw = adc.read_adc_raw(0,0)
     regn = adc.read_adc_voltage(0,0) #channel, mode = 0, 0
@@ -49,30 +49,37 @@ def update_sensors(Log):
     regntext = "Regn: " + str(round(regn,4)) + "V "
     regnrawtext = "RegnRaw: " + str(round(regnraw,2)) + "  "
     mictext = "Mic:  " + str(mic) + "   "
-    display.settextpos(0,-1)
+    display.settextpos(0,-2)
     display.putstring(temptext)
-    display.settextpos(1,-1)
+    display.settextpos(1,-2)
     display.putstring(cotext)
-    display.settextpos(2,-1)
+    display.settextpos(2,-2)
     display.putstring(tvoctext)
-    display.settextpos(3,-1)
+    display.settextpos(3,-2)
     display.putstring(regntext)
-    display.settextpos(4,-1)
+    display.settextpos(4,-2)
     display.putstring(regnrawtext)
-    display.settextpos(5,-1)
+    display.settextpos(5,-2)
     display.putstring(mictext)
     err = gas_sensor.checkerror()
     if err:
-        display.settextpos(7,-1)
+        display.settextpos(7,-2)
         display.putstring("sens_gas err: " + err)
     if Log:
         append_log(temp, co, tvoc, regn, mic)
         subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
+    if Backup:
+        subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
 
 initiate()
+i = 0
 while(1):
-    update_sensors(True)
+    i += 1
+    update_sensors(True, False)
     sleep(10)
+    if i == 60:
+        update_sensors(True,True) #usb-backup
+        i = 0
 gas_sensor.close_bus()
 display.close_bus()
 adc.close_bus()
