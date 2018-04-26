@@ -23,19 +23,19 @@ def append_log(temp, co, tvoc, regn, mic):
             file = open("/home/pi/citisense/logs/data_log.csv", "a")
         except IOError:
             display.settextpos(7,-1)
-            display.putstring("USB-mem IO-Err log")
-            print("USB-mem IO-Err logger")
+            display.putstring("IO-Err log")
+            print("IO-Err logger")
             return 2
         if os.stat("/home/pi/citisense/logs/data_log.csv").st_size == 0:
             file.write('Time, Temp, CO2, TVOC, Rain, Noise\n')
         file.write(datetime.now().strftime('%H:%M:%S') + ", " + str("%.2f" % temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(round(regn,3)) + ", " + str(mic) + "\n")
         file.close()
         display.settextpos(12,-2)
-        display.putstring("USB Connected")
+        display.putstring("Logged")
     else:
-        print("No USB")
+        print("Io error logger")
         display.settextpos(12,-2)
-        display.putstring("No USB          ")
+        display.putstring("io error logger         ")
         sleep(1)
 def update_sensors(Log, Backup):
     (co,tvoc) = gas_sensor.readsensors()
@@ -67,9 +67,12 @@ def update_sensors(Log, Backup):
         display.putstring("sens_gas err: " + err)
     if Log:
         append_log(temp, co, tvoc, regn, mic)
-        subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
     if Backup:
+        display.settextpos(9,-2)
+        display.putstring("WRITING USB PLS WAIT")
+        subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
         subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
+        display.putstring("                    ")
 
 initiate()
 i = 0
@@ -77,7 +80,7 @@ while(1):
     i += 1
     update_sensors(True, False)
     sleep(10)
-    if i == 60:
+    if i == 6:
         update_sensors(True,True) #usb-backup
         i = 0
 gas_sensor.close_bus()

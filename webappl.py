@@ -11,8 +11,8 @@ def read_log():
                 log_content += line + "<br/>"
         return log_content
     except IOError:
-        print("USB-mem IO-Err webapp")
-        return "IO Error USB-mem webapp"
+        print("IO-Err webapp")
+        return "IO Error webapp"
 
 app = Flask(__name__)
 @app.route('/')
