@@ -38,7 +38,7 @@ pi = pigpio.pi()
 try:
     pi.bb_i2c_close(SDA)
     sleep(0.2)
-except pigpio.error as e: 
+except pigpio.error as e:
     print(str(e) + " Startar om bb i2c port " + str(SDA))
 gas = pi.bb_i2c_open(SDA,SCL,350000)
 def close_bus():
@@ -106,7 +106,7 @@ def calctemp():
     ntc_temp += 1.0 / (25 + 273.15)
     ntc_temp = 1.0 / ntc_temp
     ntc_temp -= 273.15
-    return ntc_temp - tempOffset
+    return ntc_temp - 25
 
 def set_environment(temperature, humidity = 50 ):
     if temperature < -25:
