@@ -1,10 +1,7 @@
 #!/usr/bin/python
 
 # Original source: from bluez-5.7/test/simple-agent
-
-# EcoDroidLink/ykasidit@gmail.com modifications:
-# - automate the agent for running on a headless Pi - to answer pair and connection requests without a blocking query
-# - handle running on older bluez versions - agent registration (tested with Ubuntu 12.04's BlueZ 4.98)
+#Edited by Jonathan Strandberg
 
 from __future__ import absolute_import, print_function, unicode_literals
 
