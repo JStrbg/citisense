@@ -1,6 +1,6 @@
 import os
 import time
-import display
+import i2c_devices as display
 import gas_sensor
 import adc
 import math

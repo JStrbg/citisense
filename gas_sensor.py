@@ -106,7 +106,7 @@ def calctemp():
     ntc_temp += 1.0 / (25 + 273.15)
     ntc_temp = 1.0 / ntc_temp
     ntc_temp -= 273.15
-    return ntc_temp - 25
+    return ntc_temp + 120
 
 def set_environment(temperature, humidity = 50 ):
     if temperature < -25:
