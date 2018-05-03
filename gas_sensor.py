@@ -31,10 +31,10 @@ CCS811_DRIVE_MODE_250MS = 0x04
 
 CCS811_HW_ID_CODE = 0x81
 CCS811_REF_RESISTOR = 100000
-tempOffset = 0
 SDA = 22
 SCL = 27
 pi = pigpio.pi()
+tempOffset = 0
 try:
     pi.bb_i2c_close(SDA)
     sleep(0.2)
@@ -76,14 +76,8 @@ def readsensors():
         sleep(0.2)
         pass
     buf = recieve(CCS811_ALG_RESULT_DATA,4)
-    cleaned_buf = [0] * 4
-    for i in range(len(buf)):
-        if buf[i] is '':
-            cleaned_buf[i] = 0
-        else:
-            cleaned_buf[i] = int(buf[i])
-    co = (cleaned_buf[0] << 8) | (cleaned_buf[1])
-    tvc = (cleaned_buf[2] << 8) | (cleaned_buf[3])
+    co = (buf[0] << 8) | buf[1]
+    tvc = (buf[2] << 8) | buf[3]
     if co < 400:
         (co,tvc) = readsensors()
     return [co,tvc]
@@ -106,7 +100,8 @@ def calctemp():
     ntc_temp += 1.0 / (25 + 273.15)
     ntc_temp = 1.0 / ntc_temp
     ntc_temp -= 273.15
-    return ntc_temp + 120
+    print(str(tempOffset) + "  ntc: " + str(ntc_temp))
+    return ntc_temp - tempOffset
 
 def set_environment(temperature, humidity = 50 ):
     if temperature < -25:

@@ -45,7 +45,7 @@ def update_sensors(Log, Backup):
     regn = adc.read_adc_voltage(0,0) #channel, mode = 0, 0
     temp = gas_sensor.calctemp()
     mic = adc.estimate_noise()
-    temptext = "Temp: " + str("%.2f" % temp + "C  ")
+    temptext = "Temp: " + str("%.2f" % temp + "C   ")
     cotext = "CO2:  "+  str(co) + " ppm  "
     tvoctext = "TVOC: " + str(tvoc) + " ppm   "
     regntext = "Regn: " + str(round(regn,4)) + "V "
