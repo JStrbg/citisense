@@ -59,8 +59,11 @@ def init(meas_mode):
     pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
     sleep(0.1)
     status = recieve(CCS811_STATUS,1)
-    #checkerror()
+    if status == 0 or status == None:
+        return 0
+    else:
     send(CCS811_MEAS_MODE, meas_mode) #Välj mode
+        return 1
 
 def dataready():
     status = recieve(CCS811_STATUS,1)

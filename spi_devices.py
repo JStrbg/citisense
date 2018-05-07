@@ -11,6 +11,14 @@ def close_bus():
     pi.spi_close(bus)
     pi.spi_close(mic)
     pi.stop()
+def adc_init(): #Try to figure out availability, should be some noise if connected
+    if (read_adc_raw(0,0) == 0):
+        return 0
+    return 1
+def mic_init():
+    if(estimate_noise(300) == 0):
+        return 0
+    return 1
 def read_mic():
     (count,buf) = pi.spi_read(mic,2)
     #print(count)
@@ -20,11 +28,11 @@ def read_mic():
     else:
         sample = 2048 - sample
     return sample #*3.3/23
-def estimate_noise():
+def estimate_noise(sample_count):
     sample = 0
-    for i in range(100):
+    for i in range(sample_count):
         sample += abs(read_mic())
-    return round(sample/100,1)
+    return round(sample/sample_count,2)
 def read_adc_voltage(channel, mode):
     """
     Read the voltage from the selected channel on the ADC

@@ -110,28 +110,32 @@ def close_bus():
 def send(addr, mode, data):
     pi.i2c_write_byte_data(bus, mode, data)
 
-def init():
+def display_init():
     ADDRESS = 0x3c
-    send(ADDRESS, cmd_mod, 0xae)
-    send(ADDRESS, cmd_mod, 0xd5)
-    send(ADDRESS, cmd_mod, 0x50)
-    send(ADDRESS, cmd_mod, 0x20)
-    send(ADDRESS, cmd_mod, 0x81)
-    send(ADDRESS, cmd_mod, 0x80)
-    send(ADDRESS, cmd_mod, 0xa0)
-    send(ADDRESS, cmd_mod, 0xa4)
-    send(ADDRESS, cmd_mod, 0xa6)
-    send(ADDRESS, cmd_mod, 0xad)
-    send(ADDRESS, cmd_mod, 0x80)
-    send(ADDRESS, cmd_mod, 0xc0)
-    send(ADDRESS, cmd_mod, 0xd9)
-    send(ADDRESS, cmd_mod, 0x1f)
-    send(ADDRESS, cmd_mod, 0xdb)
-    send(ADDRESS, cmd_mod, 0x27)
-    send(ADDRESS, cmd_mod, 0xaf)
-    send(ADDRESS, cmd_mod, 0xb0)
-    send(ADDRESS, cmd_mod, 0x00)
-    send(ADDRESS, cmd_mod, 0x11)
+    try:
+        send(ADDRESS, cmd_mod, 0xae)
+        send(ADDRESS, cmd_mod, 0xd5)
+        send(ADDRESS, cmd_mod, 0x50)
+        send(ADDRESS, cmd_mod, 0x20)
+        send(ADDRESS, cmd_mod, 0x81)
+        send(ADDRESS, cmd_mod, 0x80)
+        send(ADDRESS, cmd_mod, 0xa0)
+        send(ADDRESS, cmd_mod, 0xa4)
+        send(ADDRESS, cmd_mod, 0xa6)
+        send(ADDRESS, cmd_mod, 0xad)
+        send(ADDRESS, cmd_mod, 0x80)
+        send(ADDRESS, cmd_mod, 0xc0)
+        send(ADDRESS, cmd_mod, 0xd9)
+        send(ADDRESS, cmd_mod, 0x1f)
+        send(ADDRESS, cmd_mod, 0xdb)
+        send(ADDRESS, cmd_mod, 0x27)
+        send(ADDRESS, cmd_mod, 0xaf)
+        send(ADDRESS, cmd_mod, 0xb0)
+        send(ADDRESS, cmd_mod, 0x00)
+        send(ADDRESS, cmd_mod, 0x11)
+        return 1
+    except:
+        return 0
 
 def clearDisplay():
     for j in range (0,16):
