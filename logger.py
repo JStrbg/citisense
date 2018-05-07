@@ -73,9 +73,9 @@ def update_sensors(Log, Backup):
     if(mic_available):
         mic = spi_devices.estimate_noise()
     if(display_available):
-        temptext = "Temp: " + str(temp) + "C   "
-        cotext = "CO2:  "+  str(co) + " ppm  "
-        tvoctext = "TVOC: " + str(tvoc) + " ppm   "
+        temptext = "Temp: " + str(temp) + "C  "
+        cotext = "CO2:  "+  str(co) + "ppm  "
+        tvoctext = "TVOC: " + str(tvoc) + "ppm   "
         regntext = "Regn: " + str(regn) + "V "
         regnrawtext = "RegnRaw: " + str(regnraw) + "  "
         mictext = "Mic:  " + str(mic) + "   "

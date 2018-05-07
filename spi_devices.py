@@ -12,11 +12,11 @@ def close_bus():
     pi.spi_close(mic)
     pi.stop()
 def adc_init(): #Try to figure out availability, should be some noise if connected
-    if (read_adc_raw(0,0) == 0):
+    if (read_adc_raw(0,0) <= 2):
         return 0
     return 1
 def mic_init():
-    if(estimate_noise(300) == 0):
+    if(estimate_noise(300) == 2048.0):
         return 0
     return 1
 def read_mic():
@@ -28,7 +28,7 @@ def read_mic():
     else:
         sample = 2048 - sample
     return sample #*3.3/23
-def estimate_noise(sample_count):
+def estimate_noise(sample_count = 100):
     sample = 0
     for i in range(sample_count):
         sample += abs(read_mic())

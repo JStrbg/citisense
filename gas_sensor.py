@@ -59,11 +59,10 @@ def init(meas_mode):
     pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
     sleep(0.1)
     status = recieve(CCS811_STATUS,1)
-    if status == 0 or status == None:
+    if status[0] == 0x00 :
         return 0
-    else:
     send(CCS811_MEAS_MODE, meas_mode) #Välj mode
-        return 1
+    return 1
 
 def dataready():
     status = recieve(CCS811_STATUS,1)
@@ -103,7 +102,7 @@ def calctemp():
     ntc_temp += 1.0 / (25 + 273.15)
     ntc_temp = 1.0 / ntc_temp
     ntc_temp -= 273.15
-    print(str(tempOffset) + "  ntc: " + str(ntc_temp))
+    #print(str(tempOffset) + "  ntc: " + str(ntc_temp))
     return ntc_temp - tempOffset
 
 def set_environment(temperature, humidity = 50 ):
