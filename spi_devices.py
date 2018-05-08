@@ -1,7 +1,7 @@
 import pigpio
 
 pi = pigpio.pi()
-bus = pi.spi_open(0,100000,0) #slave 0, spi bus 0, 1MHz
+bus = pi.spi_open(0,1000000,0) #slave 0, spi bus 0, 1MHz
 mic = pi.spi_open(1,48000,0)
 adcrefvoltage = 5.0
 #(a,b) = pi.spi_read(bus,count)
@@ -33,7 +33,7 @@ def estimate_noise(sample_count = 100):
     for i in range(sample_count):
         sample += abs(read_mic())
     return round(sample/sample_count,2)
-def read_adc_voltage(channel):
+def read_adc_voltage(channel): #returned as percentage of ref
     if (channel > 1) or (channel < 0):
         raise ValueError('read_adc_voltage: channel out of range')
     if (mode > 1) or (mode < 0):
