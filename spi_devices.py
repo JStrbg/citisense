@@ -3,7 +3,7 @@ import pigpio
 pi = pigpio.pi()
 bus = pi.spi_open(0,1000000,0) #slave 0, spi bus 0, 1MHz
 mic = pi.spi_open(1,48000,0)
-adcrefvoltage = 5.21
+adcrefvoltage = 5.0
 #(a,b) = pi.spi_read(bus,count)
 #(byte_count, rx_data) = pi.spi_xfer(bus,tx_data)
 #pi.spi_write(bus,data)

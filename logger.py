@@ -30,7 +30,7 @@ def initiate():
         global adc_available
         adc_available = True
 
-def append_log(temp, co, tvoc, regn, mic):
+def append_log(temp, co, tvoc, regn, mic, wind):
     if os.path.isdir("/home/pi/citisense/logs/"):
         if(display_available):
             i2c_devices.settextpos(12,-2)
@@ -44,8 +44,8 @@ def append_log(temp, co, tvoc, regn, mic):
             print("IO-Err logger")
             return 2
         if os.stat("/home/pi/citisense/logs/data_log.csv").st_size == 0:
-            file.write('Time, Temp, CO2, TVOC, Rain, Noise\n')
-        file.write(datetime.now().strftime('%H:%M:%S') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(regn) + ", " + str(mic) + "\n")
+            file.write('Time, Temp, CO2, TVOC, Rain, Noise, Wind\n')
+        file.write(datetime.now().strftime('%H:%M:%S') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(regn) + ", " + str(mic) + ", " + str(wind) + "\n" )
         file.close()
         if(display_available):
             i2c_devices.settextpos(12,-2)
@@ -68,16 +68,17 @@ def update_sensors(Log, Backup):
         (co,tvoc) = gas_sensor.readsensors()
         temp = round(gas_sensor.calctemp(),3)
     if(adc_available):
-        regnraw = spi_devices.read_adc_raw(0,0)
-        regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
+        regn = round((spi_devices.read_adc_raw(0,0)/4096),2) #divide by 2^12 to get percentage
+        #regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
+        wind = round((spi_devices.read_adc_raw(1,0)/4096),2)
     if(mic_available):
         mic = spi_devices.estimate_noise()
     if(display_available):
         temptext = "Temp: " + str(temp) + "C  "
         cotext = "CO2:  "+  str(co) + "ppm  "
         tvoctext = "TVOC: " + str(tvoc) + "ppm   "
-        regntext = "Regn: " + str(regn) + "V "
-        regnrawtext = "RegnRaw: " + str(regnraw) + "  "
+        regntext = "Regn: " + str(regn) + "% "
+        windtext = "Wind: " + str(wind) + "%  "
         mictext = "Mic:  " + str(mic) + "   "
         i2c_devices.settextpos(0,-2)
         i2c_devices.putstring(temptext)
@@ -88,12 +89,12 @@ def update_sensors(Log, Backup):
         i2c_devices.settextpos(3,-2)
         i2c_devices.putstring(regntext)
         i2c_devices.settextpos(4,-2)
-        i2c_devices.putstring(regnrawtext)
+        i2c_devices.putstring(windtext)
         i2c_devices.settextpos(5,-2)
         i2c_devices.putstring(mictext)
 
     if Log == True:
-        append_log(temp, co, tvoc, regn, mic)
+        append_log(temp, co, tvoc, regn, mic, wind)
     if Backup == True:
         if(display_available):
             i2c_devices.settextpos(9,-2)
