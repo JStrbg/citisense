@@ -64,13 +64,14 @@ def update_sensors(Log, Backup):
     regnraw = None
     regn = None
     mic = None
+    wind = None
     if(ccs11_available):
         (co,tvoc) = gas_sensor.readsensors()
         temp = round(gas_sensor.calctemp(),3)
     if(adc_available):
-        regn = round((spi_devices.read_adc_raw(0,0)/4096),2) #divide by 2^12 to get percentage
+        regn = round((spi_devices.read_adc_raw(0)/40.96),2) #divide by 2^12 to get percentage
         #regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
-        wind = round((spi_devices.read_adc_raw(1,0)/4096),2)
+        wind = round((spi_devices.read_adc_raw(1)/40.96),2)
     if(mic_available):
         mic = spi_devices.estimate_noise()
     if(display_available):
