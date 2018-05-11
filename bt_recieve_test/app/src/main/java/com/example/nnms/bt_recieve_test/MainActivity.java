@@ -261,6 +261,10 @@ public class MainActivity extends AppCompatActivity {
     };
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         return  device.createInsecureRfcommSocketToServiceRecord(BTMODULEUUID);
+<<<<<<< HEAD
+=======
+        //creates secure outgoing connection with BT device using UUID
+>>>>>>> 0eb3e9da3b17d60513bef88a38149ff3d524e760
     }
 
     private class ConnectedThread extends Thread {

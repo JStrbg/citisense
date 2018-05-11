@@ -1,6 +1,7 @@
 import pigpio
 import math
 from time import sleep
+arduino_addr = 0x04
 CCS811_ADDRESS  =  0x5b
 
 CCS811_STATUS = 0x00
@@ -40,15 +41,15 @@ try:
     sleep(0.2)
 except pigpio.error as e:
     print(str(e) + " Startar om bb i2c port " + str(SDA))
-gas = pi.bb_i2c_open(SDA,SCL,350000)
+bus = pi.bb_i2c_open(SDA,SCL,300000)
 def close_bus():
     pi.bb_i2c_close(SDA)
     pi.stop()
-def send(mode,data):
-    (s, buf) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 2, mode, data, 3, 0])
-def recieve(mode,count):
-    (s, buf) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, mode, 3, 0])
-    (s, buf) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 6, count, 3, 0])
+def send(addr,mode,data):
+    (s, buf) = pi.bb_i2c_zip(SDA,[4, addr, 2, 7, 2, mode, data, 3, 0])
+def recieve(addr,mode,count):
+    (s, buf) = pi.bb_i2c_zip(SDA,[4, addr, 2, 7, 1, mode, 3, 0])
+    (s, buf) = pi.bb_i2c_zip(SDA,[4, addr, 2, 6, count, 3, 0])
     if s >= 0:
         return buf
     else:
@@ -58,14 +59,14 @@ def init(meas_mode):
     #Starta applikationen
     pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
     sleep(0.1)
-    status = recieve(CCS811_STATUS,1)
+    status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
     if status[0] == 0x00 :
         return 0
-    send(CCS811_MEAS_MODE, meas_mode) #Välj mode
+    send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode) #Välj mode
     return 1
 
 def dataready():
-    status = recieve(CCS811_STATUS,1)
+    status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
     if status == '':
         return False
     if (int(status[0]) & 0x08) == 0x08:
@@ -77,22 +78,29 @@ def readsensors():
     while(not dataready()):
         sleep(0.2)
         pass
-    buf = recieve(CCS811_ALG_RESULT_DATA,4)
+    buf = recieve(CCS811_ADDRESS, CCS811_ALG_RESULT_DATA,4)
     co = (buf[0] << 8) | buf[1]
     tvc = (buf[2] << 8) | buf[3]
     if co < 400:
         (co,tvc) = readsensors()
     return [co,tvc]
 
+def read_arduino():
+    sun_v_raw = recieve(arduino_addr, 0x00, 2)
+    sun_v = (int(sun_v_raw[1]) << 8) | int(sun_v_raw[0])
+    batt_v_raw = recieve(arduino_addr, 0x01, 2)
+    batt_v = (int(batt_v_raw[1]) << 8) | int(batt_v_raw[0])
+    return (sun_v, batt_v)
+
 def checkerror():
-    buf = recieve(CCS811_STATUS,1)
+    buf = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
     if  (int(buf[0]) & 0x01) == 0x01: #Error reported by sensor
-        buf = recieve(CCS811_ERROR_ID, 1)
+        buf = recieve(CCS811_ADDRESS, CCS811_ERROR_ID, 1)
         print("Error is: " + str(buf))
         return str(buf)
 
 def calctemp():
-    buf = recieve(CCS811_NTC, 4)
+    buf = recieve(CCS811_ADDRESS, CCS811_NTC, 4)
     vref = (buf[0] << 8) | buf[1]
     vrntc = (buf[2] << 8) | buf[3]
     rntc = (float(vrntc) * float(CCS811_REF_RESISTOR) / float(vref) )
