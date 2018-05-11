@@ -65,13 +65,15 @@ def update_sensors(Log, Backup):
     regn = None
     mic = None
     wind = None
+    (sun, battery) = i2c_devices.read_arduino()
+
     if(ccs11_available):
         (co,tvoc) = gas_sensor.readsensors()
         temp = round(gas_sensor.calctemp(),3)
     if(adc_available):
-        regn = round((spi_devices.read_adc_raw(0)/40.96),2) #divide by 2^12 to get percentage
+        regn = round((spi_devices.read_adc_raw(0)/40.95),2) #divide by 2^12 to get percentage
         #regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
-        wind = round((spi_devices.read_adc_raw(1)/40.96),2)
+        wind = round((spi_devices.read_adc_raw(1)/40.95),2)
     if(mic_available):
         mic = spi_devices.estimate_noise()
     if(display_available):
@@ -81,6 +83,8 @@ def update_sensors(Log, Backup):
         regntext = "Regn: " + str(regn) + "% "
         windtext = "Wind: " + str(wind) + "%  "
         mictext = "Mic:  " + str(mic) + "   "
+        suntext = "Sun: " + str(sun) + "   "
+        battext = "Battery: " + str(battery) + "   "
         i2c_devices.settextpos(0,-2)
         i2c_devices.putstring(temptext)
         i2c_devices.settextpos(1,-2)
@@ -93,6 +97,11 @@ def update_sensors(Log, Backup):
         i2c_devices.putstring(windtext)
         i2c_devices.settextpos(5,-2)
         i2c_devices.putstring(mictext)
+        i2c_devices.settextpos(6,-2)
+        i2c_devices.putstring(suntext)
+        i2c_devices.settextpos(7,-2)
+        i2c_devices.putstring(battext)
+
 
     if Log == True:
         append_log(temp, co, tvoc, regn, mic, wind)
