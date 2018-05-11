@@ -100,24 +100,20 @@ BasicFont = [[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],
 
 pi=pigpio.pi()
 display_bus = pi.i2c_open(1, 0x3c)
-arduino_bus = pi.i2c_open(1, 0x04)
 cmd_mod = 0x80
 dat_mod = 0x40
 
-def close_display_bus():
+def close_bus():
     pi.i2c_close(display_bus)
     pi.stop()
 
 def send(bus, mode, data):
     pi.i2c_write_byte_data(bus, mode, data)
 
-def recieve(bus, mode):
-    data = pi.i2c_read_byte_data(bus, mode)
-    return data
-def read_arduino():
-    sun_v = recieve(arduino_bus, 0x00)
-    batt_v = recieve(arduino_bus, 0x01)
-    return (sun_v, batt_v)
+def recieve(bus, mode, count=1):
+    pi.i2c_write_byte(bus, mode)
+    (cnt,bytearr) = pi.i2c_read_device(bus,count)
+    return bytearr
 
 def display_init():
     try:
