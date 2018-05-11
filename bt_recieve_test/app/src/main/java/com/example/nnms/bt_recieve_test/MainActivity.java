@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -66,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
         mOffBtn = (Button)findViewById(R.id.off);
         mDiscoverBtn = (Button)findViewById(R.id.discover);
         mListPairedDevicesBtn = (Button)findViewById(R.id.PairedBtn);
-        mLED1 = (CheckBox)findViewById(R.id.checkboxLED1);
 
         mBTArrayAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1);
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); // get a handle on the bluetooth radio
@@ -98,15 +95,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(),"Bluetooth device not found!",Toast.LENGTH_SHORT).show();
         }
         else {
-
-            mLED1.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v){
-                    if(mConnectedThread != null) //First check to make sure thread created
-                        mConnectedThread.write("1");
-                }
-            });
-
 
             mScanBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -271,10 +259,8 @@ public class MainActivity extends AppCompatActivity {
             }.start();
         }
     };
-
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
-        return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
-        //creates secure outgoing connection with BT device using UUID
+        return  device.createInsecureRfcommSocketToServiceRecord(BTMODULEUUID);
     }
 
     private class ConnectedThread extends Thread {
@@ -307,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
                     // Read from the InputStream
                     bytes = mmInStream.available();
                     if(bytes != 0) {
-                        SystemClock.sleep(100); //pause and wait for rest of data. Adjust this depending on your sending speed.
+                        SystemClock.sleep(8); //pause and wait for rest of data. Adjust this depending on your sending speed.
                         bytes = mmInStream.available(); // how many bytes are ready to be read?
                         bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
                         mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
