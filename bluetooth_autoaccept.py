@@ -220,12 +220,11 @@ if __name__ == '__main__':
 	(options, args) = parser.parse_args()
 
 	if options.capability:
-		capability  = options.capability
+	    capability  = options.capability
 
 	mainloop = GObject.MainLoop()
-
-        try: #try new bluez 5.7 code
-            obj = bus.get_object(BUS_NAME, "/org/bluez");
+        try:
+            obj = bus.get_object(BUS_NAME, "/org/bluez")
             manager = dbus.Interface(obj, "org.bluez.AgentManager1")
 
             #loop to handle and omit dbus.exceptions.DBusException: org.bluez.Error.AlreadyExists: Already Exists - in case user uses a GUI bluetooth-applet (that comes in GNOME, etc.) to handle pairing and connection requests... ours is not needed then

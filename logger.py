@@ -48,7 +48,7 @@ def append_log(temp, co, tvoc, regn, mic, wind, sun, battery):
             file = open("/home/pi/citisense/logs/data_log.csv", "a")
         except IOError:
             if(display_available):
-                i2c_devices.settextpos(7,-1)
+                i2c_devices.settextpos(8,-1)
                 i2c_devices.putstring("IO-Err log")
             print("IO-Err logger")
             return 2
@@ -75,7 +75,7 @@ def update_sensors(Log, Backup):
     mic = None
     wind = None
     sun = None
-    battery = 1337
+    battery = None
     
     if(arduino_available):
         (sun, battery) = i2c_bb_devices.read_arduino()
@@ -129,13 +129,15 @@ def update_sensors(Log, Backup):
         subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
         if(display_available):
             i2c_devices.putstring("                    ")
-    if battery < 200:
-        shutdown()
+    #if arduino_available:
+        #if battery < 695:
+            #shutdown()
 def shutdown():
     i2c_bb_devices.close_bus()
     i2c_devices.close_bus()
     spi_devices.close_bus()
-    subprocess.call(['sudo', 'shutdown', '-t', '0'])
+    subprocess.call(['sudo', 'sync'])
+    subprocess.call(['sudo', 'shutdown', '-h', 'now'])
     sys.exit()
 initiate()
 i = 0
