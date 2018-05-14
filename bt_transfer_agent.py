@@ -13,9 +13,9 @@ def send_file(s,dir):
             s.send(packet)
         except BluetoothError:
             packet = None
+            print("Disconnected")
     
     file.close()
-    s.send('\n')
     
 def is_connected(s):
     try:
@@ -55,8 +55,12 @@ while(1):
             send_file(client_socket, "/home/pi/citisense/logs/rpi.png")
             print("Done")
         elif description != 'F':
-            client_socket.send("E\n")
             print(description)
+            try:
+                client_socket.send("E\n")
+            except BluetoothError:
+                print("Disconnected")
+            
 
     client_socket.close()
 pisocket.close()
