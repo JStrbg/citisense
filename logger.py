@@ -24,9 +24,9 @@ def initiate():
         display_available = True
         i2c_devices.clearDisplay()
     if(i2c_bb_devices.init_ccs811(0x10)):# mode = 0x10 #0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
+        #returns 2 if newly booted and should wait 20min before accurate read
         global ccs11_available
         ccs11_available = True
-        temp = i2c_bb_devices.calctemp()
         temp = i2c_bb_devices.calctemp()
         i2c_bb_devices.tempOffset = temp - 25.0
         #i2c_bb_devices.set_environment(21,50)
@@ -77,17 +77,17 @@ def update_sensors(Log, Backup):
     wind = None
     sun = None
     battery = None
-    
+
     if(arduino_available):
         (sun, battery) = i2c_bb_devices.read_arduino()
 
     if(ccs11_available):
         (co,tvoc) = i2c_bb_devices.readsensors()
         temp = round(i2c_bb_devices.calctemp(),3)
-        
+
     if(temperature_available):
         temp = i2c_devices.read_temperature()
-        
+
     if(adc_available):
         regn = round((spi_devices.read_adc_raw(0)/40.95),2) #divide by 2^(12-2) to get percentage to ref
         #regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
@@ -139,7 +139,6 @@ def shutdown():
     i2c_devices.close_bus()
     spi_devices.close_bus()
     subprocess.call(['sudo', 'sync'])
-    print("synced")
     subprocess.call(['sudo', 'shutdown', '-h', 'now'])
     sys.exit()
 initiate()
@@ -152,5 +151,3 @@ while(1):
         #update_sensors(True,True) #usb-backup + pic
         i = 0
     sleep(0.9)
-
-
