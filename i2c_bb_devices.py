@@ -55,18 +55,19 @@ def recieve(addr,mode,count):
     else:
         raise ValueError('i2c error returned s < 0 on recieve')
 
-def init(meas_mode):
+def init_ccs811(meas_mode):
     #Starta applikationen
     try:
-        pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
-        sleep(0.1)
-        status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
-        if status[0] == 0x00 :
-            return 0
-        send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode) #Välj mode
+        if not dataready():
+            pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
+            sleep(0.1)
+            #status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
+    
+            send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode) #Välj mode
+            sleep(0.1)
         return 1
     except:
-        return 1
+        return 0
 
 def dataready():
     status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)

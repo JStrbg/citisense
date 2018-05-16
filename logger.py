@@ -23,9 +23,10 @@ def initiate():
         global display_available
         display_available = True
         i2c_devices.clearDisplay()
-    if(i2c_bb_devices.init(0x10)):# mode = 0x10 #0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
+    if(i2c_bb_devices.init_ccs811(0x10)):# mode = 0x10 #0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
         global ccs11_available
         ccs11_available = True
+        temp = i2c_bb_devices.calctemp()
         temp = i2c_bb_devices.calctemp()
         i2c_bb_devices.tempOffset = temp - 25.0
         #i2c_bb_devices.set_environment(21,50)
@@ -129,14 +130,16 @@ def update_sensors(Log, Backup):
         subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
         if(display_available):
             i2c_devices.putstring("                    ")
-    #if arduino_available:
-        #if battery < 695:
-            #shutdown()
+    if arduino_available:
+        if battery < 640:
+            shutdown()
 def shutdown():
+    print("exiting")
     i2c_bb_devices.close_bus()
     i2c_devices.close_bus()
     spi_devices.close_bus()
     subprocess.call(['sudo', 'sync'])
+    print("synced")
     subprocess.call(['sudo', 'shutdown', '-h', 'now'])
     sys.exit()
 initiate()
