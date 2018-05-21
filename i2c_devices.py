@@ -98,8 +98,14 @@ BasicFont = [[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],
 [0x00,0x02,0x01,0x01,0x02,0x01,0x00,0x00],
 [0x00,0x02,0x05,0x05,0x02,0x00,0x00,0x00]]
 
+display_addr = 0x3c
+temp_val_addr = 0x04
+temp_eeprom = 0x57
+temp_write_protect = 0x37
+
 pi=pigpio.pi()
 display_bus = pi.i2c_open(1, 0x3c)
+temp_val_bus = pi.i2c_open(1,temp_val_addr)
 cmd_mod = 0x80
 dat_mod = 0x40
 
@@ -111,10 +117,17 @@ def send(bus, mode, data):
     pi.i2c_write_byte_data(bus, mode, data)
 
 def recieve(bus, mode, count=1):
-    pi.i2c_write_byte(bus, mode)
+    if mode:
+        pi.i2c_write_byte(bus, mode)
     (cnt,bytearr) = pi.i2c_read_device(bus,count)
     return bytearr
 
+def get_temperature():
+    arr = recieve(temp_val_bus, None, 2)
+    temperature = (int(arr[1]) << 8) | (int(arr[0] >> 4))
+    if int(arr[1]) & 0x0F:
+        temperature = 65536 - temperature
+    return temperature
 def display_init():
     try:
         send(display_bus, cmd_mod, 0xae)
