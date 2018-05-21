@@ -27,8 +27,7 @@ def initiate():
         #returns 2 if newly booted and should wait 20min before accurate read
         global ccs11_available
         ccs11_available = True
-        temp = i2c_bb_devices.calctemp()
-        i2c_bb_devices.tempOffset = temp - 25.0
+        #temp = i2c_devices.get_temperature()
         #i2c_bb_devices.set_environment(21,50)
     if(spi_devices.adc_init()):
         global adc_available
@@ -68,7 +67,7 @@ def append_log(temp, co, tvoc, regn, mic, wind, sun, battery):
             i2c_devices.putstring("io error logger         ")
         sleep(1)
 def update_sensors(Log, Backup):
-    temp = None
+    temp = i2c_devices.get_temperature()
     co = None
     tvoc = None
     regnraw = None
