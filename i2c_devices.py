@@ -124,10 +124,11 @@ def recieve(bus, mode, count=1):
 
 def get_temperature():
     arr = recieve(temp_val_bus, None, 2)
-    temperature = (int(arr[1]) << 8) | (int(arr[0] >> 4))
-    if int(arr[1]) & 0x0F:
-        temperature = 65536 - temperature
-    return temperature
+    print(str(arr))
+    #temperature = (int(arr[0]) << 8) | (int(arr[1] >> 7))
+    #if int(arr[1]) & 0x0F:
+        #temperature = 65536 - temperature
+    return arr
 def display_init():
     try:
         send(display_bus, cmd_mod, 0xae)
