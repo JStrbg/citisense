@@ -104,26 +104,33 @@ temp_eeprom = 0x57
 temp_write_protect = 0x37
 
 pi=pigpio.pi()
-display_bus = pi.i2c_open(1, 0x3c)
-temp_val_bus = pi.i2c_open(1,temp_val_addr)
+display_bus = pi.i2c_open(1, display_addr)
+temp_val_bus = pi.i2c_open(1, temp_val_addr)
+#temp_eeprom_bus = pi.i2c_open(1, temp_eeprom)
 cmd_mod = 0x80
 dat_mod = 0x40
 
 def close_bus():
     pi.i2c_close(display_bus)
+    pi.i2c_close(temp_val_bus)
+    #pi.i2c_close(temp_eeprom_bus)
     pi.stop()
 
 def send(bus, mode, data):
     pi.i2c_write_byte_data(bus, mode, data)
 
 def recieve(bus, mode, count=1):
-    if mode:
-        pi.i2c_write_byte(bus, mode)
+    pi.i2c_write_byte(bus, mode)
     (cnt,bytearr) = pi.i2c_read_device(bus,count)
     return bytearr
-
+def temp_init():
+    try:
+        send(temp_val_bus, 0x01, 0x60) #set 12 bit res, normal op mode, rest defaults 0b01100000
+        return 1
+    except:
+        return 0
 def get_temperature():
-    arr = recieve(temp_val_bus, None, 2)
+    arr = recieve(temp_val_bus, 0x00, 2)
     print(str(arr))
     #temperature = (int(arr[0]) << 8) | (int(arr[1] >> 7))
     #if int(arr[1]) & 0x0F:

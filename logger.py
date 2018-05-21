@@ -32,6 +32,9 @@ def initiate():
     if(spi_devices.adc_init()):
         global adc_available
         adc_available = True
+    if(i2c_devices.temp_init()):
+        global temperature_available
+        temperature_available = True
     try:
         (tmp,tmp2) = i2c_bb_devices.read_arduino()
         global arduino_available
@@ -67,7 +70,7 @@ def append_log(temp, co, tvoc, regn, mic, wind, sun, battery):
             i2c_devices.putstring("io error logger         ")
         sleep(1)
 def update_sensors(Log, Backup):
-    temp = i2c_devices.get_temperature()
+    temp = None
     co = None
     tvoc = None
     regnraw = None
@@ -82,10 +85,10 @@ def update_sensors(Log, Backup):
 
     if(ccs11_available):
         (co,tvoc) = i2c_bb_devices.readsensors()
-        temp = round(i2c_bb_devices.calctemp(),3)
+        #temp = round(i2c_bb_devices.calctemp(),3)
 
     if(temperature_available):
-        temp = i2c_devices.read_temperature()
+        temp = i2c_devices.get_temperature()
 
     if(adc_available):
         regn = round((spi_devices.read_adc_raw(0)/40.95),2) #divide by 2^(12-2) to get percentage to ref
