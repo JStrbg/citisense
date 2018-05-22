@@ -90,7 +90,7 @@ def update_sensors(Log, Backup):
     if(temperature_available):
         temp = i2c_devices.get_temperature()
         if (ccs11_available):
-            i2c_bb_devices.set_environment(temp,50)
+            i2c_bb_devices.set_environment(temp)
 
     if(adc_available):
         regn = round((spi_devices.read_adc_raw(0)/40.95),2) #divide by 2^(12-2) to get percentage to ref

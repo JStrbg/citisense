@@ -131,4 +131,5 @@ def set_environment(temperature, humidity = 50 ):
     temp_low = (int(fractional / 0.001953125) & 0x1FF)
     temp_conv = (temp_high | temp_low)
     buf = [hum_perc, 0x00,((temp_conv >> 8) & 0xFF), (temp_conv & 0xFF)]
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 4, CCS811_ENV_DATA, buf[0], buf[1], buf[2], 3, 0])
+   
+    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 5, CCS811_ENV_DATA, buf[0], buf[1], buf[2],buf[3], 3, 0])

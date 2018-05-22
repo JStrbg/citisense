@@ -16,7 +16,7 @@ def adc_init(): #Try to figure out availability, should be some noise if connect
         return 0
     return 1
 def mic_init():
-    if(estimate_noise(300) == 2048.0):
+    if(estimate_noise(300) == 2048.0): #If absolutely silent, mic probably not connected
         return 0
     return 1
 def read_mic():
