@@ -93,7 +93,7 @@ def update_sensors(Log, Backup):
     if(adc_available):
         regn = round((spi_devices.read_adc_raw(0)/40.95),2) #divide by 2^(12-2) to get percentage to ref
         #regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
-        wind = round((spi_devices.read_adc_raw(1)/40.95),2)
+        wind = round(spi_devices.read_adc_raw(1),2) #estimering för rpm: x4
     if(mic_available):
         mic = spi_devices.estimate_noise()
     if(display_available):

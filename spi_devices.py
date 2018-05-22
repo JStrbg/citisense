@@ -21,12 +21,7 @@ def mic_init():
     return 1
 def read_mic():
     (count,buf) = pi.spi_read(mic,2)
-    #print(count)
-    sample = (buf[0]<< 8) + buf[1]
-    if sample & 0x800 == 0x800:    #check sign bit
-        sample = -1*sample + 2048
-    else:
-        sample = 2048 - sample
+    sample = 2048.0 -((buf[0]<< 8) + buf[1]) 
     return sample #*3.3/23
 def estimate_noise(sample_count = 100):
     sample = 0

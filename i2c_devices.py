@@ -99,7 +99,7 @@ BasicFont = [[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],
 [0x00,0x02,0x05,0x05,0x02,0x00,0x00,0x00]]
 
 display_addr = 0x3c
-temp_val_addr = 0x04
+temp_val_addr = 0x4f
 temp_eeprom = 0x57
 temp_write_protect = 0x37
 
@@ -127,15 +127,15 @@ def temp_init():
     try:
         send(temp_val_bus, 0x01, 0x60) #set 12 bit res, normal op mode, rest defaults 0b01100000
         return 1
-    except:
+    except i2cerror:
         return 0
 def get_temperature():
     arr = recieve(temp_val_bus, 0x00, 2)
-    print(str(arr))
-    #temperature = (int(arr[0]) << 8) | (int(arr[1] >> 7))
-    #if int(arr[1]) & 0x0F:
-        #temperature = 65536 - temperature
-    return arr
+    #print(str(arr[0]) + " " + str(arr[1]))
+    temperature = int(arr[0]) + (int(arr[1] >> 4)*0.0625)
+    if (int(arr[0]) & 0x08):
+        temperature = 65536.0 - temperature
+    return temperature
 def display_init():
     try:
         send(display_bus, cmd_mod, 0xae)
