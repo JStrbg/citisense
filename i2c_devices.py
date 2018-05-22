@@ -133,7 +133,7 @@ def get_temperature():
     arr = recieve(temp_val_bus, 0x00, 2)
     #print(str(arr[0]) + " " + str(arr[1]))
     temperature = int(arr[0]) + (int(arr[1] >> 4)*0.0625)
-    if (int(arr[0]) & 0x08):
+    if (int(arr[0]) & 0x80):
         temperature = 65536.0 - temperature
     return temperature
 def display_init():

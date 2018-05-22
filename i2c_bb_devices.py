@@ -119,9 +119,9 @@ def calctemp():
     return ntc_temp - tempOffset
 
 def set_environment(temperature, humidity = 50 ):
-    if temperature < -25:
-        temperature = -25
-    if humidity < 0 or humidity > 100:
+    if temperature < -25.0:
+        temperature = -25.0
+    if humidity < 0 or humidity > 100.0:
         humidity = 50
     hum_perc = int(round(humidity)) << 1
     parts = math.modf(temperature)
