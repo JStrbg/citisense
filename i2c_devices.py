@@ -134,7 +134,7 @@ def get_temperature():
     #print(str(arr[0]) + " " + str(arr[1]))
     temperature = int(arr[0]) + (int(arr[1] >> 4)*0.0625)
     if (int(arr[0]) & 0x80):
-        temperature = 65536.0 - temperature
+        temperature = 256 - temperature
     return temperature
 def display_init():
     try:
