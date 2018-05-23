@@ -15,6 +15,17 @@ adc_available = False
 temp_available = False
 arduino_available = False
 temperature_available = False
+
+temp = None
+co = None
+tvoc = None
+regnraw = None
+regn = None
+mic = None
+wind = None
+sun = None
+battery = None
+
 def initiate():
     if(spi_devices.mic_init()):
         global mic_available
@@ -70,34 +81,35 @@ def append_log(temp, co, tvoc, regn, mic, wind, sun, battery):
             i2c_devices.putstring("io error logger         ")
         sleep(1)
 def update_sensors(Log, Backup):
-    temp = None
-    co = None
-    tvoc = None
-    regnraw = None
-    regn = None
-    mic = None
-    wind = None
-    sun = None
-    battery = None
-
+    global temp
+    global co
+    global tvoc
+    global regnraw
+    global regn
+    global mic
+    global wind
+    global sun
+    global battery
+    
+    if(mic_available):
+        mic = spi_devices.estimate_noise(20)
+        
     if(arduino_available):
         (sun, battery) = i2c_bb_devices.read_arduino()
-
-    if(ccs11_available):
-        (co,tvoc) = i2c_bb_devices.readsensors()
-        #temp = round(i2c_bb_devices.calctemp(),3)
-
+        
     if(temperature_available):
         temp = i2c_devices.get_temperature()
         if (ccs11_available):
             i2c_bb_devices.set_environment(temp)
 
+    if(ccs11_available and i2c_bb_devices.dataready()):
+        (co,tvoc) = i2c_bb_devices.read_gas()
+        #temp = round(i2c_bb_devices.calctemp(),3)
+    
     if(adc_available):
         regn = round((spi_devices.read_adc_raw(0)/40.95),2) #divide by 2^(12-2) to get percentage to ref
         #regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
         wind = round(spi_devices.read_adc_raw(1),2) #estimering för rpm: x4
-    if(mic_available):
-        mic = spi_devices.estimate_noise()
     if(display_available):
         temptext = "Temp: " + str(temp) + "C  "
         cotext = "CO2:  "+  str(co) + "ppm  "
@@ -149,9 +161,11 @@ initiate()
 i = 0
 while(1):
     i += 1
-    update_sensors(False, False)
-    if i == 60:
+    
+    if i == 25000: #logga var 5e minut
         update_sensors(True, False) #log local
         #update_sensors(True,True) #usb-backup + pic
         i = 0
-    sleep(0.9)
+    else:
+        update_sensors(False, False)
+    sleep(0.02)

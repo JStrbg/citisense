@@ -79,15 +79,10 @@ def dataready():
     else:
         return False
 
-def readsensors():
-    while(not dataready()):
-        sleep(0.2)
-        pass
+def read_gas():
     buf = recieve(CCS811_ADDRESS, CCS811_ALG_RESULT_DATA,4)
     co = (buf[0] << 8) | buf[1]
     tvc = (buf[2] << 8) | buf[3]
-    if co < 400:
-        (co,tvc) = readsensors()
     return [co,tvc]
 
 def read_arduino():
