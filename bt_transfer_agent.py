@@ -30,7 +30,7 @@ pisocket.bind(("", PORT_ANY))
 pisocket.listen(1)
     
 uuid = "00001101-0000-1000-8000-00805F9B34FB"
-advertise_service(pisocket, "SerialPortService", service_id = uuid, service_classes = [uuid, SERIAL_PORT_CLASS], profiles = [ SERIAL_PORT_PROFILE ], protocols = [OBEX_UUID])
+#advertise_service(pisocket, "SerialPortService", service_id = uuid, service_classes = [uuid, SERIAL_PORT_CLASS], profiles = [ SERIAL_PORT_PROFILE ], protocols = [OBEX_UUID])
 
 while(1):
     
@@ -38,23 +38,23 @@ while(1):
     while(is_connected(client_socket)):
         description = '\n'
         try:
-            while(description == '\n'):
+            while(description[0] == '\n'):
                 description = client_socket.recv(1)
         except BluetoothError:
             print("Client disconnected")
-        if description == 'T':
+        if description[0] == 84: #ASCII T
             print(str(description))
             client_socket.send("T\n")
             print("Done")
-        elif description == 'S':
+        elif description[0] == 83: #ASCII S
             print(str(description))
             send_file(client_socket, "/home/pi/citisense/logs/data_log.csv")
             print("Done")
-        elif description == 'P':
+        elif description[0] == 80:
             print(str(description))
             send_file(client_socket, "/home/pi/citisense/logs/rpi.png")
             print("Done")
-        elif description != 'F':
+        elif description[0] != 70:
             print(description)
             try:
                 client_socket.send("E\n")
