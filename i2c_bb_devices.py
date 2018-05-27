@@ -56,19 +56,15 @@ def recieve(addr,mode,count):
         raise ValueError('i2c error returned s < 0 on recieve')
 
 def init_ccs811(meas_mode):
-    #Starta applikationen
     try:
         if not dataready():
-            pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
-            sleep(0.1)
-            #status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
-
-            send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode) #Välj mode
-            sleep(0.1)
-            return 2
-        return 1
+            send(CCS811_ADDRESS, CCS811_BOOTLOADER_APP_START, 0x00)
+            sleep(0.1) # Let device boot for 0.1s
+            send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode) # Choose measuring mode
+            return 2 # Return 2 to indicate newly booted device
+        return 1 # Return 1 to indicate device already booted
     except:
-        return 0
+        return 0 # Return 0 to indicate device not responding
 
 def dataready():
     status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
@@ -110,7 +106,7 @@ def calctemp():
     ntc_temp += 1.0 / (25 + 273.15)
     ntc_temp = 1.0 / ntc_temp
     ntc_temp -= 273.15
-    #print(str(tempOffset) + "  ntc: " + str(ntc_temp))
+
     return ntc_temp - tempOffset
 
 def set_environment(temperature, humidity = 50 ):
@@ -126,5 +122,5 @@ def set_environment(temperature, humidity = 50 ):
     temp_low = (int(fractional / 0.001953125) & 0x1FF)
     temp_conv = (temp_high | temp_low)
     buf = [hum_perc, 0x00,((temp_conv >> 8) & 0xFF), (temp_conv & 0xFF)]
-   
+   # Custom send larger bytearray
     (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 5, CCS811_ENV_DATA, buf[0], buf[1], buf[2],buf[3], 3, 0])
