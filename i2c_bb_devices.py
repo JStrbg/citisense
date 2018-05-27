@@ -58,7 +58,8 @@ def recieve(addr,mode,count):
 def init_ccs811(meas_mode):
     try:
         if not dataready():
-            send(CCS811_ADDRESS, CCS811_BOOTLOADER_APP_START, 0x00)
+            # Boot command
+            (s, buf) = pi.bb_i2c_zip(SDA,[4, CCS811_ADDRESS, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
             sleep(0.1) # Let device boot for 0.1s
             send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode) # Choose measuring mode
             return 2 # Return 2 to indicate newly booted device
@@ -68,8 +69,6 @@ def init_ccs811(meas_mode):
 
 def dataready():
     status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
-    if status == '':
-        return False
     if (int(status[0]) & 0x08) == 0x08:
         return True
     else:
