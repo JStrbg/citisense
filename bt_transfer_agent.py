@@ -29,7 +29,7 @@ pisocket = BluetoothSocket( RFCOMM )
 pisocket.bind(("", PORT_ANY))
 pisocket.listen(1)
     
-uuid = "00001101-0000-1000-8000-00805F9B34FB"
+#uuid = "00001101-0000-1000-8000-00805F9B34FB"
 #advertise_service(pisocket, "SerialPortService", service_id = uuid, service_classes = [uuid, SERIAL_PORT_CLASS], profiles = [ SERIAL_PORT_PROFILE ], protocols = [OBEX_UUID])
 
 while(1):
@@ -55,7 +55,7 @@ while(1):
             send_file(client_socket, "/home/pi/citisense/logs/rpi.png")
             print("Done")
         elif description[0] != 70:
-            print(description)
+            print(str(description))
             try:
                 client_socket.send("E\n")
             except BluetoothError:
