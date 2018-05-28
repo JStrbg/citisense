@@ -38,6 +38,6 @@ def read_adc_voltage(channel): #returned as percentage of ref
     return voltage
 def read_adc_raw(channel):
     (count,raw) = pi.spi_xfer(bus,[1,(2 + channel)<<6,0])
-    ret = ((raw[1] & 0x0F) << 8) + (raw[2])
+    ret = ((raw[1] << 8) + raw[2])
     
     return ret
