@@ -109,17 +109,26 @@ def calctemp():
     return ntc_temp - tempOffset
 
 def set_environment(temperature, humidity = 50 ):
+    # Minimum enterable temperature
     if temperature < -25.0:
         temperature = -25.0
+    # Check humidity bounds
     if humidity < 0 or humidity > 100.0:
         humidity = 50
+    # LSB is worth 0.5C and so on
     hum_perc = int(round(humidity)) << 1
+    # Split fractionals and integers
     parts = math.modf(temperature)
+    # Remove sign bit from fractional part
     fractional = math.fabs(parts[0])
     temp_int = int(parts[1])
+    # Add offset and shift 9
     temp_high = ((temp_int + 25) << 9)
+    # LSB of fractional is worth 1/512, but must be sent as integer
     temp_low = (int(fractional / 0.001953125) & 0x1FF)
+    # Merge result
     temp_conv = (temp_high | temp_low)
+    # Complete bytearray with humidity
     buf = [hum_perc, 0x00,((temp_conv >> 8) & 0xFF), (temp_conv & 0xFF)]
-   # Custom send larger bytearray
-    (s, buffy) = pi.bb_i2c_zip(SDA,[4, 0x5b, 2, 7, 5, CCS811_ENV_DATA, buf[0], buf[1], buf[2],buf[3], 3, 0])
+    # Custom send larger bytearray
+    (s, buffy) = pi.bb_i2c_zip(SDA,[4, CCS811_ADDRESS, 2, 7, 5, CCS811_ENV_DATA, buf[0], buf[1], buf[2], buf[3], 3, 0])
