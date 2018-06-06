@@ -1,5 +1,7 @@
 from bluetooth import *
+import subprocess
 import os
+from time import sleep
 
 def send_file(s,dir):
     size = os.path.getsize(dir)
@@ -28,11 +30,8 @@ pisocket = BluetoothSocket( RFCOMM )
 
 pisocket.bind(("", PORT_ANY))
 pisocket.listen(1)
-subprocess.call("sudo service hostapd stop",shell=True)
-subprocess.call("sudo ifconfig wlan0 down",shell=True)
-wifipower = False
-#uuid = "00001101-0000-1000-8000-00805F9B34FB"
-#advertise_service(pisocket, "SerialPortService", service_id = uuid, service_classes = [uuid, SERIAL_PORT_CLASS], profiles = [ SERIAL_PORT_PROFILE ], protocols = [OBEX_UUID])
+wifipower = True
+#subprocess.call("sudo ifconfig wlan0 down",shell=True)            
 
 while(1):
 
@@ -40,7 +39,7 @@ while(1):
     while(is_connected(client_socket)):
         description = '\n'
         try:
-            while(description[0] == '\n'):
+            while(description[0] == '\n' and is_connected(client_socket)):
                 description = client_socket.recv(1)
         except BluetoothError:
             print("Client disconnected")
@@ -57,12 +56,14 @@ while(1):
             send_file(client_socket, "/home/pi/citisense/logs/rpi.png")
             print("Done")
         if wifipower and description[0] == 119:
-            subprocess.call("sudo service hostapd stop",shell=True)
             subprocess.call("sudo ifconfig wlan0 down",shell=True)
             wifipower = False
-        if not wifipower and description[0] == 87::
+        if not wifipower and description[0] == 87: 
             subprocess.call("sudo ifconfig wlan0 up",shell=True)
-            subprocess.call("sudo service hostapd start",shell=True)
+            sleep(3)
+            subprocess.call("sudo service hostapd restart",shell=True)
+            subprocess.call("sudo service hostapd restart",shell=True)
+            subprocess.call("sudo service xrdp restart",shell=True)
             wifipower = True
         elif description[0] != 70:
             print(str(description))

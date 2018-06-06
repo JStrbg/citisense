@@ -158,14 +158,18 @@ def shutdown():
     subprocess.call(['sudo', 'shutdown', '-h', 'now'])
     sys.exit()
 initiate()
-i = 0
+count1 = 0
+count2 = 0
 while(1):
-    i += 1
-    
-    if i == 25000: #logga var 5e minut
-        update_sensors(True, False) #log local
-        #update_sensors(True,True) #usb-backup + pic
-        i = 0
+    count1 +=1
+    if count1 == 300: #logga var 5e minut
+        count1 = 0
+        if count2 == 5:
+            update_sensors(True, False) #log local
+            count2 = 0
+        else:
+            count2 += 1
+            update_sensors(True, True) #usb-backup + pic
     else:
         update_sensors(False, False)
-    sleep(0.02)
+    sleep(0.6)
