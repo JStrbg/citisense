@@ -127,7 +127,7 @@ def temp_init():
     try:
         send(temp_val_bus, 0x01, 0x60) #set 12 bit res, normal op mode, rest defaults 0b01100000
         return 1
-    except i2cerror:
+    except pigpio.error:
         return 0
 def get_temperature():
     arr = recieve(temp_val_bus, 0x00, 2)

@@ -85,7 +85,9 @@ def read_arduino():
     sun_v = (int(sun_v_raw[1]) << 8) | int(sun_v_raw[0])
     batt_v_raw = recieve(arduino_addr, 0x01, 2)
     batt_v = (int(batt_v_raw[1]) << 8) | int(batt_v_raw[0])
-    return (sun_v, batt_v)
+    current_raw = recieve(arduino_addr, 0x02, 2)
+    current = (int(current_raw[1]) << 8) | int(current_raw[0])
+    return (sun_v, batt_v, current)
 
 def checkerror():
     buf = recieve(CCS811_ADDRESS, CCS811_STATUS,1)

@@ -1,4 +1,4 @@
-#!/bin/sh
+sudo sh /home/pi/citisense/hub-off.sh &
 sleep 5
 sudo hciconfig hci0 name 'Citisense'
 sudo hciconfig hci0 noauth
@@ -12,7 +12,7 @@ sleep 2
 sudo python3 /home/pi/citisense/bt_transfer_agent.py &
 sleep 1
 sudo sdptool add SP
-sudo sh /home/pi/citisense/hub-off.sh &
+
 #sudo python3 /home/pi/citisense/gatt_server.py &
 sleep 1
 #sudo hciconfig hci0 leadv 0
