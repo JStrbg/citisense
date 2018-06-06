@@ -19,8 +19,7 @@ temperature_available = False
 temp = None
 co = None
 tvoc = None
-regnraw = None
-regn = None
+rain = None
 mic = None
 wind = None
 sun = None
@@ -62,15 +61,16 @@ def append_log():
             i2c_devices.putstring("Logging..")
         try:
             file = open("/home/pi/citisense/logs/data_log.csv", "a")
-        except IOError:
+        except IOError as e:
             if(display_available):
                 i2c_devices.settextpos(10,-1)
                 i2c_devices.putstring("IO-Err log")
             print("IO-Err logger")
+            log_error(str(e) + " Opening data_log.csv ERR")
             return 2
         if os.stat("/home/pi/citisense/logs/data_log.csv").st_size == 0:
-            file.write('Time, Temp, CO2, TVOC, Rain, Noise, Wind, Sun, Battery, Current, Watt\n')
-        file.write(datetime.now().strftime('%H:%M:%S') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(regn) + ", " + str(mic) + ", " + str(wind) + ", " + str(sun) + ", " + str(battery) + ", " + str(current) + ", " + str(watt) + "\n" )
+            file.write('Time, Temp[C], CO2[ppm], TVOC[ppm], Rain[V], Noise[dB], Wind[mV], Sun[V], Battery[V], Current[mA], Watt[W]\n')
+        file.write(datetime.now().strftime('%H:%M:%S') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(rain) + ", " + str(mic) + ", " + str(wind) + ", " + str(sun) + ", " + str(battery) + ", " + str(current) + ", " + str(watt) + "\n" )
         file.close()
         if(display_available):
             i2c_devices.settextpos(12,-2)
@@ -82,6 +82,7 @@ def append_log():
             i2c_devices.settextpos(12,-2)
             i2c_devices.putstring("io error logger         ")
         sleep(1)
+        
 def update_sensors(Log, Backup):
     global ccs811_available
     global mic_available
@@ -92,8 +93,7 @@ def update_sensors(Log, Backup):
     global temp
     global co
     global tvoc
-    global regnraw
-    global regn
+    global rain
     global mic
     global wind
     global sun
@@ -144,9 +144,8 @@ def update_sensors(Log, Backup):
 
     if(adc_available):
         try:
-            regn = round((spi_devices.read_adc_raw(0)*3.3/4095),2) #divide by 2^(12-2) and mult 3.3 to get V
-            #regn = round(spi_devices.read_adc_voltage(0,0),4) #channel, mode = 0, 0
-            wind = round(spi_devices.read_adc_raw(1)*3300/4095,2) #estimering för rpm: x4, omvandlas till mV
+            rain = round(spi_devices.read_adc_voltage(0),2)
+            wind = round(spi_devices.read_adc_voltage(1)*1000,2) # mV
         except Exception as e:
             log_error(str(e) + " ADC ERR, disabling")
 
@@ -154,7 +153,7 @@ def update_sensors(Log, Backup):
         temptext = "Temp: " + str(temp) + "C  "
         cotext = "CO2:  "+  str(co) + "ppm  "
         tvoctext = "TVOC: " + str(tvoc) + "ppm   "
-        regntext = "Regn: " + str(regn) + "V "
+        raintext = "Rain: " + str(rain) + "V "
         windtext = "Wind: " + str(wind) + "mV   "
         mictext = "Mic:  " + str(mic) + "dB   "
         suntext = "Sun: " + str(sun) + "V   "
@@ -168,7 +167,7 @@ def update_sensors(Log, Backup):
         i2c_devices.settextpos(2,-2)
         i2c_devices.putstring(tvoctext)
         i2c_devices.settextpos(3,-2)
-        i2c_devices.putstring(regntext)
+        i2c_devices.putstring(raintext)
         i2c_devices.settextpos(4,-2)
         i2c_devices.putstring(windtext)
         i2c_devices.settextpos(5,-2)
@@ -187,16 +186,19 @@ def update_sensors(Log, Backup):
         if(display_available):
             i2c_devices.settextpos(10,-2)
             i2c_devices.putstring("WRITING TO USB")
-        subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
-        subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
+
+        err = subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
+        err += subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
+        if err != 0:
+            log_error(str(err) + " USB_mem or camera error")
         if(display_available):
-            i2c_devices.putstring("                    ")
+            i2c_devices.putstring(" " + str(err) + "        ")
 def shutdown():
     print("exiting")
+    log_error("Shutting down due to low battery")
     i2c_bb_devices.close_bus()
     i2c_devices.close_bus()
     spi_devices.close_bus()
-    log_error("Shutting down due to low battery")
     subprocess.call(['sudo', 'sync'])
     subprocess.call(['sudo', 'shutdown', '-h', 'now'])
     sys.exit()
@@ -219,4 +221,4 @@ while(1):
             update_sensors(True, False) #usb-backup + pic
     else:
         update_sensors(False, False)
-    sleep(0.6)
+    sleep(0.65)
