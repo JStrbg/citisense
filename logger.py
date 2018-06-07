@@ -70,7 +70,7 @@ def append_log():
             return 2
         if os.stat("/home/pi/citisense/logs/data_log.csv").st_size == 0:
             file.write('Time, Temp[C], CO2[ppm], TVOC[ppm], Rain[V], Noise[dB], Wind[mV], Sun[V], Battery[V], Current[mA], Watt[W]\n')
-        file.write(datetime.now().strftime('%H:%M:%S') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(rain) + ", " + str(mic) + ", " + str(wind) + ", " + str(sun) + ", " + str(battery) + ", " + str(current) + ", " + str(watt) + "\n" )
+        file.write(datetime.now().strftime('%Y-%m-%d_%H:%M') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(rain) + ", " + str(mic) + ", " + str(wind) + ", " + str(sun) + ", " + str(battery) + ", " + str(current) + ", " + str(watt) + "\n" )
         file.close()
         if(display_available):
             i2c_devices.settextpos(12,-2)
@@ -104,16 +104,16 @@ def update_sensors(Log, Backup):
     if(mic_available):
         mic = spi_devices.estimate_noise(20)
         #convert to dB
-        mic = round(20*math.log10(math.fabs(mic/3.3),3))
+        mic = round(20*math.log10(math.fabs(mic/3.3)),3)
 
     if(arduino_available):
         try:
             (sun, battery, current) = i2c_bb_devices.read_arduino()
-            if(battery < 640): #Battery too low, arduino about to cut power
+            if(battery < 640 and battery > 0): #Battery too low, arduino about to cut power
                 shutdown()
             sun = round(float(sun*4.95/1023),3)
             battery = round(float(battery*4.95/1023),3)
-            current = round(float(current*4.95/(1023*4.74)),3)
+            current = round(float(current*4950/(1023*4.74)),3)
             watt = round(current*sun,3)
         except Exception as e:
             arduino_available = False
@@ -155,11 +155,11 @@ def update_sensors(Log, Backup):
         tvoctext = "TVOC: " + str(tvoc) + "ppm   "
         raintext = "Rain: " + str(rain) + "V "
         windtext = "Wind: " + str(wind) + "mV   "
-        mictext = "Mic:  " + str(mic) + "dB   "
-        suntext = "Sun: " + str(sun) + "V   "
+        mictext = "Mic:  " + str(mic) + "dB "
+        suntext = "Sun:  " + str(sun) + "V   "
         battext = "Batt: " + str(battery) + "V   "
-        curtext = "Curr: " + str(current*1000) + "mA   "
-        wattext = "Power: " + str(watt) + "W   "
+        curtext = "Curr: " + str(current) + "mA "
+        wattext = "Power:" + str(watt) + "W   "
         i2c_devices.settextpos(0,-2)
         i2c_devices.putstring(temptext)
         i2c_devices.settextpos(1,-2)
@@ -192,7 +192,7 @@ def update_sensors(Log, Backup):
         if err != 0:
             log_error(str(err) + " USB_mem or camera error")
         if(display_available):
-            i2c_devices.putstring(" " + str(err) + "        ")
+            i2c_devices.putstring(" " + str(err) + "                        ")
 def shutdown():
     print("exiting")
     log_error("Shutting down due to low battery")
@@ -202,23 +202,24 @@ def shutdown():
     subprocess.call(['sudo', 'sync'])
     subprocess.call(['sudo', 'shutdown', '-h', 'now'])
     sys.exit()
+    
 def log_error(e):
     file = open("/home/pi/citisense/logs/error.txt", "a")
-    file.write(datetime.now().strftime('%H:%M:%S') + "Msg: " + e + "\n")
+    file.write(datetime.now().strftime('%Y-%m-%d_%H:%M') + " Msg: " + e + "\n")
     file.close()
 initiate()
 count1 = 0
 count2 = 0
 while(1):
     count1 +=1
-    if count1 == 300: #logga var 5e minut
+    if count1 == 200: #logga var 5e minut
         count1 = 0
         if count2 == 5:
             update_sensors(True, False) #log local
             count2 = 0
         else:
             count2 += 1
-            update_sensors(True, False) #usb-backup + pic
+            update_sensors(True, True) #usb-backup + pic
     else:
         update_sensors(False, False)
-    sleep(0.65)
+    sleep(0.7)
