@@ -113,7 +113,6 @@ dat_mod = 0x40
 def close_bus():
     pi.i2c_close(display_bus)
     pi.i2c_close(temp_val_bus)
-    #pi.i2c_close(temp_eeprom_bus)
     pi.stop()
 
 def send(bus, mode, data):
@@ -123,19 +122,25 @@ def recieve(bus, mode, count=1):
     pi.i2c_write_byte(bus, mode)
     (cnt,bytearr) = pi.i2c_read_device(bus,count)
     return bytearr
+
 def temp_init():
     try:
-        send(temp_val_bus, 0x01, 0x60) #set 12 bit res, normal op mode, rest defaults 0b01100000
+        #set 12 bit resolution, normal op mode, rest defaults 0b01100000
+        send(temp_val_bus, 0x01, 0x60)
         return 1
     except pigpio.error:
         return 0
+
 def get_temperature():
     arr = recieve(temp_val_bus, 0x00, 2)
-    #print(str(arr[0]) + " " + str(arr[1]))
+    #Sample arrives split, first part integer, last decimal
     temperature = int(arr[0]) + (int(arr[1] >> 4)*0.0625)
+    #Compensate for two's-complement form
     if (int(arr[0]) & 0x80):
         temperature = 256 - temperature
     return temperature
+
+########Display functions##########
 def display_init():
     try:
         send(display_bus, cmd_mod, 0xae)

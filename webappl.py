@@ -1,7 +1,5 @@
 import os
 from flask import Flask
-#https://projects.raspberrypi.org/en/projects/python-web-server-with-flask/4
-#https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 
 def read_log():
     log_content = ""

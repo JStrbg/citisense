@@ -3,7 +3,7 @@ import math
 from time import sleep
 arduino_addr = 0x04
 CCS811_ADDRESS  =  0x5b
-
+#Registers on CCS811
 CCS811_STATUS = 0x00
 CCS811_MEAS_MODE = 0x01
 CCS811_ALG_RESULT_DATA = 0x02
@@ -18,41 +18,50 @@ CCS811_FW_BOOT_VERSION = 0x23
 CCS811_FW_APP_VERSION = 0x24
 CCS811_ERROR_ID = 0xE0
 CCS811_SW_RESET = 0xFF
-
 CCS811_BOOTLOADER_APP_ERASE = 0xF1
 CCS811_BOOTLOADER_APP_DATA = 0xF2
 CCS811_BOOTLOADER_APP_VERIFY = 0xF3
 CCS811_BOOTLOADER_APP_START = 0xF4
-
 CCS811_DRIVE_MODE_IDLE = 0x00
 CCS811_DRIVE_MODE_1SEC = 0x01
 CCS811_DRIVE_MODE_10SEC = 0x02
 CCS811_DRIVE_MODE_60SEC = 0x03
 CCS811_DRIVE_MODE_250MS = 0x04
-
 CCS811_HW_ID_CODE = 0x81
 CCS811_REF_RESISTOR = 100000
+
+#bitbanging i2c pins on GPIO
 SDA = 22
 SCL = 27
 pi = pigpio.pi()
-tempOffset = 0
+
+#Close bus if already open
 try:
     pi.bb_i2c_close(SDA)
     sleep(0.2)
 except pigpio.error as e:
     print(str(e) + " Startar om bb i2c port " + str(SDA))
+
+#Open bus on GPIO pins, 300KHz
 bus = pi.bb_i2c_open(SDA,SCL,300000)
+
 def close_bus():
     pi.bb_i2c_close(SDA)
     pi.stop()
+
 def send(addr,mode,data):
+    #Bit-baning array
     (s, buf) = pi.bb_i2c_zip(SDA,[4, addr, 2, 7, 2, mode, data, 3, 0])
+
 def recieve(addr,mode,count):
+    #Specify register address
     (s, buf) = pi.bb_i2c_zip(SDA,[4, addr, 2, 7, 1, mode, 3, 0])
+    #Read specified register
     (s, buf) = pi.bb_i2c_zip(SDA,[4, addr, 2, 6, count, 3, 0])
     if s >= 0:
         return buf
     else:
+        #S should be positive if recieved correctly
         raise ValueError('i2c error returned s < 0 on recieve')
 
 def init_ccs811(meas_mode):
@@ -61,14 +70,16 @@ def init_ccs811(meas_mode):
             # Boot command
             (s, buf) = pi.bb_i2c_zip(SDA,[4, CCS811_ADDRESS, 2, 7, 1, CCS811_BOOTLOADER_APP_START, 3, 0])
             sleep(0.1) # Let device boot for 0.1s
-            send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode) # Choose measuring mode
+            # Choose measuring mode
+            send(CCS811_ADDRESS, CCS811_MEAS_MODE, meas_mode)
             return 2 # Return 2 to indicate newly booted device
         return 1 # Return 1 to indicate device already booted
-    except:
+    except pigpio.error:
         return 0 # Return 0 to indicate device not responding
 
 def dataready():
     status = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
+    # 0x08 equals the data_ready bit
     if (int(status[0]) & 0x08) == 0x08:
         return True
     else:
@@ -76,11 +87,22 @@ def dataready():
 
 def read_gas():
     buf = recieve(CCS811_ADDRESS, CCS811_ALG_RESULT_DATA,4)
+    #Values arrive split
     co = (buf[0] << 8) | buf[1]
     tvc = (buf[2] << 8) | buf[3]
     return [co,tvc]
 
+def arduino_init():
+    try:
+        (tmp,tmp2,tmp3) = i2c_bb_devices.read_arduino()
+        return 1
+    except pigpio.error:
+        #Arduino not connected
+        return 0
+
 def read_arduino():
+    #Get energy values from arduino, indexes 0, 1 and 2
+    #Arrives on split form, lower byte first
     sun_v_raw = recieve(arduino_addr, 0x00, 2)
     sun_v = (int(sun_v_raw[1]) << 8) | int(sun_v_raw[0])
     batt_v_raw = recieve(arduino_addr, 0x01, 2)
@@ -90,25 +112,13 @@ def read_arduino():
     return (sun_v, batt_v, current)
 
 def checkerror():
+    #Check for gas_sensor error
     buf = recieve(CCS811_ADDRESS, CCS811_STATUS,1)
     if  (int(buf[0]) & 0x01) == 0x01: #Error reported by sensor
+        #Check error ID
         buf = recieve(CCS811_ADDRESS, CCS811_ERROR_ID, 1)
-        print("Error is: " + str(buf))
+        print("Gas sensor error is: " + str(buf))
         return str(buf)
-
-def calctemp():
-    buf = recieve(CCS811_ADDRESS, CCS811_NTC, 4)
-    vref = (buf[0] << 8) | buf[1]
-    vrntc = (buf[2] << 8) | buf[3]
-    rntc = (float(vrntc) * float(CCS811_REF_RESISTOR) / float(vref) )
-
-    ntc_temp = math.log(rntc / 10000.0)
-    ntc_temp /= 3380.0
-    ntc_temp += 1.0 / (25 + 273.15)
-    ntc_temp = 1.0 / ntc_temp
-    ntc_temp -= 273.15
-
-    return ntc_temp - tempOffset
 
 def set_environment(temperature, humidity = 50 ):
     # Minimum enterable temperature

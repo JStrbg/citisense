@@ -1,21 +1,22 @@
 import os
 import time
-import i2c_devices
-import i2c_bb_devices
-import spi_devices
 import math
 import subprocess
 import sys
-
 from time import sleep
 from datetime import datetime
+#Sensordevices
+import i2c_devices
+import i2c_bb_devices
+import spi_devices
+#Initiate availabilities for plugNplay functionality
 ccs811_available = False
 mic_available = False
 display_available = False
 adc_available = False
 arduino_available = False
 temperature_available = False
-
+#Keep sensor values global for ease of access
 temp = None
 co = None
 tvoc = None
@@ -27,63 +28,77 @@ battery = None
 current = None
 watt = None
 
+#Figure out available devices at launch, also set certain settings
 def initiate():
     if(spi_devices.mic_init()):
         global mic_available
         mic_available = True
+
     if(i2c_devices.display_init()):
         global display_available
         display_available = True
         i2c_devices.clearDisplay()
-    if(i2c_bb_devices.init_ccs811(0x10)):# mode = 0x10 #0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
-        #returns 2 if newly booted and should wait 20min before accurate read
+
+    mode = 0x10
+    # mode: 0x10 = 1_sec_meas, 0x00 idle, 0x20 10_sec_meas, 0x30 60_sec_meas
+    if(i2c_bb_devices.init_ccs811(mode)):
+        #Init returns 2 if newly booted and should wait 20min before accurate read
+        #Not finnished implementing yet though
         global ccs811_available
         ccs811_available = True
-        #temp = i2c_devices.get_temperature()
-        #i2c_bb_devices.set_environment(21,50)
+
     if(spi_devices.adc_init()):
         global adc_available
         adc_available = True
+
     if(i2c_devices.temp_init()):
         global temperature_available
         temperature_available = True
-    try:
-        (tmp,tmp2,tmp3) = i2c_bb_devices.read_arduino()
+
+    if(i2c_bb_devices.arduino_init()):
         global arduino_available
         arduino_available = True
-    except:
-        arduino_available = False
 
+#Write current measurement values to the log file
 def append_log():
     if os.path.isdir("/home/pi/citisense/logs/"):
         if(display_available):
             i2c_devices.settextpos(12,-2)
             i2c_devices.putstring("Logging..")
+
         try:
+            #Open log file
             file = open("/home/pi/citisense/logs/data_log.csv", "a")
         except IOError as e:
+            #Some error logging
             if(display_available):
                 i2c_devices.settextpos(10,-1)
                 i2c_devices.putstring("IO-Err log")
             print("IO-Err logger")
             log_error(str(e) + " Opening data_log.csv ERR")
             return 2
+
         if os.stat("/home/pi/citisense/logs/data_log.csv").st_size == 0:
+            #If log file empty, fill out header
             file.write('Time, Temp[C], CO2[ppm], TVOC[ppm], Rain[V], Noise[dB], Wind[mV], Sun[V], Battery[V], Current[mA], Watt[W]\n')
+        #Then the sensor values separated by commas (.csv-format)
         file.write(datetime.now().strftime('%Y-%m-%d_%H:%M') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(rain) + ", " + str(mic) + ", " + str(wind) + ", " + str(sun) + ", " + str(battery) + ", " + str(current) + ", " + str(watt) + "\n" )
         file.close()
+
         if(display_available):
             i2c_devices.settextpos(12,-2)
             sleep(0.1)
             i2c_devices.putstring("          ")
     else:
-        print("Io error logger")
+        #Error tracking
+        print("Log dir not present")
         if(display_available):
             i2c_devices.settextpos(12,-2)
             i2c_devices.putstring("io error logger         ")
-        sleep(1)
-        
+        log_error("Log directory not found")
+
 def update_sensors(Log, Backup):
+    #Specify globals
     global ccs811_available
     global mic_available
     global display_available
@@ -102,20 +117,26 @@ def update_sensors(Log, Backup):
     global watt
 
     if(mic_available):
-        mic = spi_devices.estimate_noise(20)
-        #convert to dB
-        mic = round(20*math.log10(math.fabs(mic/3.3)),3)
+        #Use 30 samples, very cpu and energy-intense
+        mic = spi_devices.estimate_noise(30)
+        #convert to dBV
+        mic = round(20*math.log10(mic),3)
 
     if(arduino_available):
         try:
             (sun, battery, current) = i2c_bb_devices.read_arduino()
-            if(battery < 640 and battery > 0): #Battery too low, arduino about to cut power
+            if(battery < 640 and battery > 0):
+                #Battery too low, arduino about to cut power
                 shutdown()
-            sun = round(float(sun*4.95/1023),3)
-            battery = round(float(battery*4.95/1023),3)
-            current = round(float(current*4950/(1023*4.74)),3)
-            watt = round(current*sun,3)
+            #Convert from raw values to voltage
+            arduino_Vref = 4.95
+            sun = round(float(sun*arduino_Vref/1023),3) #V
+            battery = round(float(battery*arduino_Vref/1023),3) #V
+            current = round(float(current*arduino_Vref*1000/(1023*4.74)),3) #mA
+            #Calculate power drawn from solar panel to charge battery
+            watt = round(current*sun,3) #W
         except Exception as e:
+            #Catch error and set arduino as unavailable in case of hardware failure
             arduino_available = False
             sun = None
             battery = None
@@ -125,10 +146,15 @@ def update_sensors(Log, Backup):
 
     if(ccs811_available):
         try:
+            #Check if sample available
             if(i2c_bb_devices.dataready()):
                 (co,tvoc) = i2c_bb_devices.read_gas()
-                #temp = round(i2c_bb_devices.calctemp(),3)
+                #If co2 less than 400ppm, sample not valid yet
+                if (co < 400):
+                    co = None
+                    tvoc = None
         except Exception as e:
+            #Catch sensor error and disable it
             ccs811_available = False
             log_error(str(e) + " CCS811 ERR, disabling")
 
@@ -136,20 +162,23 @@ def update_sensors(Log, Backup):
         try:
             temp = i2c_devices.get_temperature()
             if (ccs811_available):
+                #Send temperature to CCS811 for compensation
                 i2c_bb_devices.set_environment(temp)
         except Exception as e:
+            #Catch sensor error and disable it
             temp = None
             temperature_available = False
             log_error(str(e) +  " TEMP_SENS ERR, disabling")
 
     if(adc_available):
         try:
-            rain = round(spi_devices.read_adc_voltage(0),2)
+            rain = round(spi_devices.read_adc_voltage(0),2) #V
             wind = round(spi_devices.read_adc_voltage(1)*1000,2) # mV
         except Exception as e:
             log_error(str(e) + " ADC ERR, disabling")
 
     if(display_available):
+        #Print current values to display if available
         temptext = "Temp: " + str(temp) + "C  "
         cotext = "CO2:  "+  str(co) + "ppm  "
         tvoctext = "TVOC: " + str(tvoc) + "ppm   "
@@ -180,20 +209,26 @@ def update_sensors(Log, Backup):
         i2c_devices.putstring(curtext)
         i2c_devices.settextpos(9,-2)
         i2c_devices.putstring(wattext)
+
     if Log == True:
+        #Log to local .csv file
         append_log()
+
     if Backup == True:
+        #Backup all logs + picture to USB
         if(display_available):
             i2c_devices.settextpos(10,-2)
             i2c_devices.putstring("WRITING TO USB")
-
+        #Run pic + copy scripts, return errors
         err = subprocess.call(['sudo', 'sh', '/home/pi/citisense/camera.sh'])
         err += subprocess.call(['sudo', 'sh', '/home/pi/citisense/cp_to_usb.sh'])
         if err != 0:
             log_error(str(err) + " USB_mem or camera error")
         if(display_available):
             i2c_devices.putstring(" " + str(err) + "                        ")
+
 def shutdown():
+    #Shutdown procedure, closes buses and syncs OS to SD-card
     print("exiting")
     log_error("Shutting down due to low battery")
     i2c_bb_devices.close_bus()
@@ -202,24 +237,27 @@ def shutdown():
     subprocess.call(['sudo', 'sync'])
     subprocess.call(['sudo', 'shutdown', '-h', 'now'])
     sys.exit()
-    
+
 def log_error(e):
+    #Error logging
     file = open("/home/pi/citisense/logs/error.txt", "a")
     file.write(datetime.now().strftime('%Y-%m-%d_%H:%M') + " Msg: " + e + "\n")
     file.close()
+
 initiate()
-count1 = 0
-count2 = 0
+local_timer = 0
+usb_timer= 0
+#Store values locally every 200 seconds, and on USB 200*5 seconds
 while(1):
-    count1 +=1
-    if count1 == 200: #logga var 5e minut
-        count1 = 0
-        if count2 == 5:
-            update_sensors(True, False) #log local
-            count2 = 0
+    local_timer +=1
+    if local_timer == 200:
+        local_timer = 0
+        if usb_timer == 5:
+            update_sensors(True, True) #log local
+            usb_timer = 0
         else:
-            count2 += 1
-            update_sensors(True, True) #usb-backup + pic
+            usb_timer += 1
+            update_sensors(True, False) #usb-backup + pic
     else:
         update_sensors(False, False)
     sleep(0.7)
