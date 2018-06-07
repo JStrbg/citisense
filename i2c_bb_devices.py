@@ -94,7 +94,7 @@ def read_gas():
 
 def arduino_init():
     try:
-        (tmp,tmp2,tmp3) = i2c_bb_devices.read_arduino()
+        (tmp,tmp2,tmp3) = read_arduino()
         return 1
     except pigpio.error:
         #Arduino not connected

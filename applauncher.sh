@@ -9,7 +9,7 @@ sleep  1
 sudo sdptool add SP
 sudo python3 /home/pi/citisense/logger.py &
 sleep 2
-sudo python3 /home/pi/citisense/bt_transfer_agent.py &
+sudo python3 /home/pi/citisense/wireless_handler.py &
 sleep 1
 sudo sdptool add SP
 sleep 1

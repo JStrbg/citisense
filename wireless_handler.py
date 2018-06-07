@@ -43,9 +43,9 @@ pisocket.listen(1)
 webapp = None
 #Start with wifi-ap off
 wifipower = False
-subprocess.call("sudo ifconfig wlan0 down",shell=True)
-sleep(1)
 subprocess.call("sudo service hostapd stop",shell=True)
+sleep(1)
+subprocess.call("sudo ifconfig wlan0 down",shell=True)
 
 while(1):
     #Accept connection, get client socket
@@ -60,7 +60,7 @@ while(1):
             print("Client disconnected")
             description= '\n'
 
-        elif description[0] == 83: #ASCII S
+        if description[0] == 83: #ASCII S
             # 'S' means send data logs
             print(str(description))
             send_file(client_socket, "/home/pi/citisense/logs/data_log.csv")
@@ -69,10 +69,11 @@ while(1):
         elif description[0] == 80:
             # 'P' means send picture
             print(str(description))
-            send_file(client_socket, "/home/pi/citisense/logs/pic.jpg")
+            #send_file(client_socket, "/home/pi/citisense/logs/pic.jpg")
+            subprocess.call("sudo reboot",shell=True)
             print("Done")
 
-        if wifipower and description[0] == 119: #ASCII w
+        elif wifipower and description[0] == 119: #ASCII w
             # w means turn off wifi and webserver
             os.killpg(os.getpgid(webapp.pid), signal.SIGTERM)
             subprocess.call("sudo service hostapd stop",shell=True)
@@ -80,7 +81,7 @@ while(1):
             subprocess.call("sudo ifconfig wlan0 down",shell=True)
             wifipower = False
 
-        if not wifipower and description[0] == 87: #ASCII W
+        elif not wifipower and description[0] == 87: #ASCII W
             # W means start wifi and webserver
             subprocess.call("sudo ifconfig wlan0 up",shell=True)
             subprocess.call("sudo service hostapd start",shell=True)
@@ -89,6 +90,7 @@ while(1):
             sleep(2)
             subprocess.call("sudo service hostapd restart",shell=True)
             webapp = subprocess.Popen("sudo python3 /home/pi/citisense/webappl.py", shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
+	    subprocess.call("sudo service xrdp restart",shell=True)
             wifipower = True
 
         else:
