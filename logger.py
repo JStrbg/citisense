@@ -27,6 +27,8 @@ sun = None
 battery = None
 current = None
 watt = None
+arduino_Vref = 5.0
+# sudo date -s "Mon Jun 11 19:29:20 UTC 2018"
 
 #Figure out available devices at launch, also set certain settings
 def initiate():
@@ -58,6 +60,15 @@ def initiate():
     if(i2c_bb_devices.arduino_init()):
         global arduino_available
         arduino_available = True
+        update_time()
+
+def update_time():
+    offset_raw = i2c_bb_devices.recieve(0x04, 0x03, 4)
+    offset = (int(offset_raw[3]) << 24) | (int(offset_raw[2]) << 16) | (int(offset_raw[1]) << 8) | int(offset_raw[0])
+    while (offset > 65535):
+        subprocess.call("sudo date -s '65535 seconds'",shell=True)
+        offset = offset - 65535
+    subprocess.call("sudo date -s '" + str(offset) + " seconds'",shell=True)
 
 #Write current measurement values to the log file
 def append_log():
@@ -80,7 +91,7 @@ def append_log():
 
         if os.stat("/home/pi/citisense/logs/data_log.csv").st_size == 0:
             #If log file empty, fill out header
-            file.write('Time, Temp[C], CO2[ppm], TVOC[ppm], Rain[V], Noise[dB], Wind[mV], Sun[V], Battery[V], Current[mA], Watt[W]\n')
+            file.write('Time, Temp[C], CO2[ppm], TVOC[ppm], Rain[V], Noise[dBV], Wind[mV], Sun[V], Battery[V], Current[mA], Watt[mW]\n')
         #Then the sensor values separated by commas (.csv-format)
         file.write(datetime.now().strftime('%Y-%m-%d_%H:%M') + ", " + str(temp) + ", " + str(co) + ", " + str(tvoc) + ", " + str(rain) + ", " + str(mic) + ", " + str(wind) + ", " + str(sun) + ", " + str(battery) + ", " + str(current) + ", " + str(watt) + "\n" )
         file.close()
@@ -118,7 +129,7 @@ def update_sensors(Log, Backup):
 
     if(mic_available):
         #Use 30 samples, very cpu and energy-intense
-        mic = spi_devices.estimate_noise(30)
+        mic = spi_devices.estimate_noise(20)
         #convert to dBV
         mic = round(20*math.log10(mic),3)
 
@@ -129,12 +140,12 @@ def update_sensors(Log, Backup):
                 #Battery too low, arduino about to cut power
                 shutdown()
             #Convert from raw values to voltage
-            arduino_Vref = 4.95
+
             sun = round(float(sun*arduino_Vref/1023),3) #V
             battery = round(float(battery*arduino_Vref/1023),3) #V
             current = round(float(current*arduino_Vref*1000/(1023*4.74)),3) #mA
             #Calculate power drawn from solar panel to charge battery
-            watt = round(current*sun,3) #W
+            watt = round(current*sun,3) #mW
         except Exception as e:
             #Catch error and set arduino as unavailable in case of hardware failure
             arduino_available = False
@@ -179,16 +190,16 @@ def update_sensors(Log, Backup):
 
     if(display_available):
         #Print current values to display if available
-        temptext = "Temp: " + str(temp) + "C  "
-        cotext = "CO2:  "+  str(co) + "ppm  "
-        tvoctext = "TVOC: " + str(tvoc) + "ppm   "
-        raintext = "Rain: " + str(rain) + "V "
-        windtext = "Wind: " + str(wind) + "mV   "
-        mictext = "Mic:  " + str(mic) + "dB "
-        suntext = "Sun:  " + str(sun) + "V   "
-        battext = "Batt: " + str(battery) + "V   "
-        curtext = "Curr: " + str(current) + "mA "
-        wattext = "Power:" + str(watt) + "W   "
+        temptext = "Temp:" + str(temp) + "C   "
+        cotext = "CO2: "+  str(co) + "ppm   "
+        tvoctext = "TVOC:" + str(tvoc) + "ppm    "
+        raintext = "Rain:" + str(rain) + "V  "
+        windtext = "Wind:" + str(wind) + "mV   "
+        mictext = "Mic: " + str(mic) + "dBV"
+        suntext = "Sun: " + str(sun) + "V   "
+        battext = "Batt:" + str(battery) + "V   "
+        curtext = "Curr:" + str(current) + "mA "
+        wattext = "Pwr: " + str(watt) + "mW  "
         i2c_devices.settextpos(0,-2)
         i2c_devices.putstring(temptext)
         i2c_devices.settextpos(1,-2)
@@ -253,7 +264,7 @@ while(1):
     if local_timer == 200:
         local_timer = 0
         if usb_timer == 5:
-            update_sensors(True, True) #log local
+            update_sensors(True, False) #log local
             usb_timer = 0
         else:
             usb_timer += 1
