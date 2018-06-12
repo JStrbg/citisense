@@ -222,9 +222,9 @@ def update_sensors(Log, Backup):
         i2c_devices.settextpos(9,-2)
         i2c_devices.putstring(wattext)
         i2c_devices.settextpos(10,-2)
-        i2c_devices.putstring("L: " + str(local_timer))
+        i2c_devices.putstring("L: " + str(local_timer) + "  ")
         i2c_devices.settextpos(11,-2)
-        i2c_devices.putstring("B: " + str(usb_timer))
+        i2c_devices.putstring("B: " + str(usb_timer) + " ")
 
     if Log == True:
         #Log to local .csv file

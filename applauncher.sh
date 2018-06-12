@@ -17,7 +17,5 @@ sudo sdptool add SP
 sleep 1
 #sudo hciconfig hci0 leadv 0
 #iptables-restore < /home/pi/citisence/iptables.ipv4.nat
-sudo service xrdp restart
 sleep 2
-sudo service xrdp restart
 sudo sdptool add SP

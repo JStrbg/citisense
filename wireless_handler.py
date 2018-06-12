@@ -112,10 +112,10 @@ while(1):
             subprocess.call("sudo service hostapd restart",shell=True)
             sleep(2)
             subprocess.call("sudo service hostapd restart",shell=True)
-            webapp = subprocess.Popen("sudo python3 /home/pi/citisense/webappl.py", shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid) 
-                
-            #subprocess.call("sudo service xrdp restart",shell=True)
+            webapp = subprocess.Popen("sudo python3 /home/pi/citisense/webappl.py", shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
             wifipower = True
+            sleep(1)
+            subprocess.call("sudo service xrdp restart",shell=True)
 
         else:
             #Unrecognized command
