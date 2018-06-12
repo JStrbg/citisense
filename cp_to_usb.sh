@@ -3,5 +3,7 @@ echo '1-1' | sudo tee /sys/bus/usb/drivers/usb/bind #power on USB
 sleep 8
 #Copy contents
 sudo cp /home/pi/citisense/logs/* /media/pi/KINGSTON/
-#sudo umount /media/pi/KINGSTON/
+sleep 4
+sudo umount /media/pi/KINGSTON/
+sleep 2
 echo '1-1' | sudo tee /sys/bus/usb/drivers/usb/unbind  #power off usb

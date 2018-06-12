@@ -1,4 +1,6 @@
 #Start sequence, carefully timed
+sudo umount /media/pi/KINGSTON/ &
+sleep 2
 sudo sh /home/pi/citisense/hub-off.sh &
 sleep 7
 sudo hciconfig hci0 name 'Citisense'

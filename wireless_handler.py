@@ -41,12 +41,12 @@ pisocket.listen(1)
 
 #Instantiate webapp
 webapp = None
-webapp = subprocess.Popen("sudo python3 /home/pi/citisense/webappl.py", shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
+#webapp = subprocess.Popen("sudo python3 /home/pi/citisense/webappl.py", shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
 #Start with wifi-ap off
-wifipower = True
-#subprocess.call("sudo service hostapd stop",shell=True)
+wifipower = False
+subprocess.call("sudo service hostapd stop",shell=True)
 sleep(1)
-#subprocess.call("sudo ifconfig wlan0 down",shell=True)
+subprocess.call("sudo ifconfig wlan0 down",shell=True)
 
 def recieve(sock,cnt):
     data = 10 # ASCII \n
@@ -71,17 +71,17 @@ while(1):
         print(str(description))
         if description == 'S': #ASCII S
             # 'S' means send data logs
-
+            
             send_file(client_socket, "/home/pi/citisense/logs/data_log.csv")
             print("Done")
 
         elif description == 'P':
             # 'P' means send picture
-
+            
             #send_file(client_socket, "/home/pi/citisense/logs/pic.jpg")
             subprocess.call("sudo reboot",shell=True)
             print("Done")
-
+                
         elif description == 'D' : #Ascii D
             year = recieve(client_socket,2)
             print(year)
@@ -103,7 +103,7 @@ while(1):
             sleep(1)
             subprocess.call("sudo ifconfig wlan0 down",shell=True)
             wifipower = False
-
+            
         elif not wifipower and description == 'W': #ASCII W
             # W means start wifi and webserver
             subprocess.call("sudo ifconfig wlan0 up",shell=True)
@@ -112,8 +112,8 @@ while(1):
             subprocess.call("sudo service hostapd restart",shell=True)
             sleep(2)
             subprocess.call("sudo service hostapd restart",shell=True)
-            webapp = subprocess.Popen("sudo python3 /home/pi/citisense/webappl.py", shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
-
+            webapp = subprocess.Popen("sudo python3 /home/pi/citisense/webappl.py", shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid) 
+                
             #subprocess.call("sudo service xrdp restart",shell=True)
             wifipower = True
 

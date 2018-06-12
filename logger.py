@@ -28,7 +28,8 @@ battery = None
 current = None
 watt = None
 arduino_Vref = 5.0
-# sudo date -s "Mon Jun 11 19:29:20 UTC 2018"
+local_timer = 0
+usb_timer= 0
 
 #Figure out available devices at launch, also set certain settings
 def initiate():
@@ -69,7 +70,7 @@ def update_time():
         subprocess.call("sudo date -s '65535 seconds'",shell=True)
         offset = offset - 65535
     subprocess.call("sudo date -s '" + str(offset) + " seconds'",shell=True)
-
+    
 #Write current measurement values to the log file
 def append_log():
     if os.path.isdir("/home/pi/citisense/logs/"):
@@ -140,7 +141,7 @@ def update_sensors(Log, Backup):
                 #Battery too low, arduino about to cut power
                 shutdown()
             #Convert from raw values to voltage
-
+            
             sun = round(float(sun*arduino_Vref/1023),3) #V
             battery = round(float(battery*arduino_Vref/1023),3) #V
             current = round(float(current*arduino_Vref*1000/(1023*4.74)),3) #mA
@@ -220,6 +221,10 @@ def update_sensors(Log, Backup):
         i2c_devices.putstring(curtext)
         i2c_devices.settextpos(9,-2)
         i2c_devices.putstring(wattext)
+        i2c_devices.settextpos(10,-2)
+        i2c_devices.putstring("L: " + str(local_timer))
+        i2c_devices.settextpos(11,-2)
+        i2c_devices.putstring("B: " + str(usb_timer))
 
     if Log == True:
         #Log to local .csv file
@@ -256,19 +261,18 @@ def log_error(e):
     file.close()
 
 initiate()
-local_timer = 0
-usb_timer= 0
+
 #Store values locally every 200 seconds, and on USB 200*5 seconds
 while(1):
     local_timer +=1
-    if local_timer == 200:
+    if local_timer == 300:
         local_timer = 0
-        if usb_timer == 5:
-            update_sensors(True, False) #log local
+        if usb_timer == 6:
+            update_sensors(True, True) #log USB
             usb_timer = 0
         else:
             usb_timer += 1
-            update_sensors(True, False) #usb-backup + pic
+            update_sensors(True, False) #log local
     else:
         update_sensors(False, False)
-    sleep(0.7)
+    sleep(0.8)
