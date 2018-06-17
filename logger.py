@@ -28,8 +28,12 @@ battery = None
 current = None
 watt = None
 arduino_Vref = 5.0
-local_timer = 0
-usb_timer= 0
+
+local_const_timer = 100
+usb_const_timer= 10
+
+usb_timer = usb_const_timer
+local_timer = local_const_timer
 
 #Figure out available devices at launch, also set certain settings
 def initiate():
@@ -137,7 +141,7 @@ def update_sensors(Log, Backup):
     if(arduino_available):
         try:
             (sun, battery, current) = i2c_bb_devices.read_arduino()
-            if(battery < 640 and battery > 0):
+            if(battery < 690 and battery > 0):
                 #Battery too low, arduino about to cut power
                 shutdown()
             #Convert from raw values to voltage
@@ -193,14 +197,14 @@ def update_sensors(Log, Backup):
         #Print current values to display if available
         temptext = "Temp:" + str(temp) + "C   "
         cotext = "CO2: "+  str(co) + "ppm   "
-        tvoctext = "TVOC:" + str(tvoc) + "ppm    "
+        tvoctext = "TVOC:" + str(tvoc) + "ppb    "
         raintext = "Rain:" + str(rain) + "V  "
         windtext = "Wind:" + str(wind) + "mV   "
         mictext = "Mic: " + str(mic) + "dBV"
         suntext = "Sun: " + str(sun) + "V   "
         battext = "Batt:" + str(battery) + "V   "
-        curtext = "Curr:" + str(current) + "mA "
-        wattext = "Pwr: " + str(watt) + "mW  "
+        curtext = "Curr:" + str(current) + "mA"
+        wattext = "Pwr: " + str(watt) + "mW "
         i2c_devices.settextpos(0,-2)
         i2c_devices.putstring(temptext)
         i2c_devices.settextpos(1,-2)
@@ -264,14 +268,14 @@ initiate()
 
 #Store values locally every 200 seconds, and on USB 200*5 seconds
 while(1):
-    local_timer +=1
-    if local_timer == 300:
-        local_timer = 0
-        if usb_timer == 6:
+    local_timer -=1
+    if local_timer == 0:
+        local_timer = local_const_timer
+        if usb_timer == 0:
             update_sensors(True, True) #log USB
-            usb_timer = 0
+            usb_timer = usb_const_timer
         else:
-            usb_timer += 1
+            usb_timer -= 1
             update_sensors(True, False) #log local
     else:
         update_sensors(False, False)

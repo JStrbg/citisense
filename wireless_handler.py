@@ -37,7 +37,7 @@ pisocket = BluetoothSocket( RFCOMM )
 #Bind socket to any port
 pisocket.bind(("", PORT_ANY))
 #Listen for 1 client
-pisocket.listen(1)
+pisocket.listen(10)
 
 #Instantiate webapp
 webapp = None
@@ -60,7 +60,7 @@ def recieve(sock,cnt):
                 cnt = cnt - 1
     except BluetoothError:
         print("Client disconnected")
-        ret = None
+        return None
     return ret.decode("ASCII")
 
 while(1):
@@ -84,15 +84,10 @@ while(1):
                 
         elif description == 'D' : #Ascii D
             year = recieve(client_socket,2)
-            print(year)
             month = recieve(client_socket,2)
-            print(month)
             day = recieve(client_socket,2)
-            print(day)
             hour = recieve(client_socket,2)
-            print(hour)
             minute = recieve(client_socket,2)
-            print(minute)
             subprocess.call('sudo date +%Y%m%d -s "20'+str(year)+str(month)+str(day)+'"',shell=True)
             subprocess.call('sudo date +%T -s "'+str(hour)+':'+str(minute)+':00"',shell=True)
 
