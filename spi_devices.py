@@ -25,6 +25,7 @@ def mic_init():
     return 1
 
 def read_mic():
+    #Read 2 bytes from mic on SPI
     (count,buf) = pi.spi_read(mic,2)
     #Arrives on split form, with 2048.0 offset (half maximum)
     sample = 2048.0 -((buf[0]<< 8) + buf[1])
@@ -46,6 +47,7 @@ def read_adc_voltage(channel):
     return raw*(refvoltage / 4095)
 
 def read_adc_raw(channel):
+    #Send instructions and recieve data simoultaniously
     #Channel 0 is rain sensor, 1 anemometer
     (count,raw) = pi.spi_xfer(bus,[1,(2 + channel)<<6,0])
     #Sample arrives split in 3 bytes, first is empty, second is upper byte, last lower
